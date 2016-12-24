@@ -2,6 +2,33 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#696969">
+    android:background="#ffffff">
+
+
+    <AutoCompleteTextView
+        android:id="@+id/index_search"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:textSize="14sp"
+        android:layout_toLeftOf="@+id/search_go"
+        android:hint="Search by Symbol or Company Name..."/>
+
+    <TextView
+        android:id="@+id/search_go"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="10dp"
+        android:padding="5dp"
+        android:gravity="center"
+        android:background="#cccccc"
+        android:layout_alignParentRight="true"
+        android:text="GO"/>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/index_recycler"
+        android:layout_below="@+id/index_search"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </RelativeLayout>

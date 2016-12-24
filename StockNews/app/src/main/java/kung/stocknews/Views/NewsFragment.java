@@ -31,15 +31,13 @@ public class NewsFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         newsCardList = MockData.getNewsCards();
-        Log.d("@#$)&@$", "num cards: " + newsCardList.size());
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.d("$@)*($", " create news");
         View view = inflater.inflate(R.layout.fragment_news, container, false);
-        recyclerView = (RecyclerView)view.findViewById(R.id.recycler);
+        recyclerView = (RecyclerView)view.findViewById(R.id.news_recycler);
         adapter = new NewsAdapter(newsCardList);
         recyclerView.setHasFixedSize(true);
         recyclerView.setAdapter(adapter);

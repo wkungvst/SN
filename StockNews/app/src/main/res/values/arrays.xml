@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <string-array name="stock_names">
+        <item>Apple</item>
+        <item>Amazon</item>
+        <item>Ace Hardware</item>
+        <item>AMEX</item>
+    </string-array>
+</resources>
