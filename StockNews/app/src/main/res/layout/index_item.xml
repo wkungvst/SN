@@ -27,4 +27,10 @@
         android:layout_height="wrap_content" />
 
     <ImageView
+        android:id="@+id/index_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/index_value">
+        
+    </ImageView>
 </RelativeLayout>
