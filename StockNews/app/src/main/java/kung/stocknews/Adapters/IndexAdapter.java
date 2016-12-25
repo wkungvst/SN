@@ -1,6 +1,11 @@
 package kung.stocknews.Adapters;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -8,14 +13,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import com.jakewharton.rxbinding.view.RxView;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import kung.stocknews.Model.IndexCard;
-import kung.stocknews.Model.NewsCard;
 import kung.stocknews.R;
+import kung.stocknews.Storage.Storage;
+import kung.stocknews.Views.DetailActivity;
+import kung.stocknews.Views.MainActivity;
 
 /**
  * Created by wkung on 12/23/16.
@@ -23,16 +33,31 @@ import kung.stocknews.R;
 public class IndexAdapter extends RecyclerView.Adapter<IndexAdapter.ViewHolder> {
 
     private ArrayList<IndexCard> indexCards;
+    private static Context activity;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
         private TextView name;
-        private TextView value;
+        private TextView symbol;
+        private TextView lprice;
+        private TextView pchange;
+        private TextView pchangep;
 
         public ViewHolder(View v) {
             super(v);
+            activity = v.getContext();
             name = (TextView)v.findViewById(R.id.index_name);
-            value = (TextView)v.findViewById(R.id.index_value);
+            symbol = (TextView)v.findViewById(R.id.index_symbol);
+            lprice = (TextView)v.findViewById(R.id.index_lprice);
+            pchange = (TextView)v.findViewById(R.id.index_pchange);
+            pchangep = (TextView)v.findViewById(R.id.index_pchangep);
+            v.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent i = new Intent(activity, DetailActivity.class);
+                //    i.putExtra("SYMBOL", )
+                }
+            });
         }
     }
 
@@ -53,9 +78,23 @@ public class IndexAdapter extends RecyclerView.Adapter<IndexAdapter.ViewHolder> 
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(ViewHolder holder, final int position) {
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(activity, DetailActivity.class);
+                i.putExtra("SYMBOL", indexCards.get(position).getSymbol());
+                activity.startActivity(i);
+            }
+        });
         holder.name.setText(indexCards.get(position).getName());
-        holder.value.setText(indexCards.get(position).getValue());
+        holder.symbol.setText(indexCards.get(position).getSymbol());
+        holder.lprice.setText(indexCards.get(position).getLastPrice());
+        holder.pchange.setText(indexCards.get(position).getPriceChange());
+        holder.pchangep.setText(indexCards.get(position).getPriceChangePercentage());
+        if((indexCards.get(position).getPriceChange().substring(0,1)).equals("-")){
+            holder.lprice.setTextColor(Color.parseColor(Storage.RED_PRIMARY));
+        }
     }
 
     @Override

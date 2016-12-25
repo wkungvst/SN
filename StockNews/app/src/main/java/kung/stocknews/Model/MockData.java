@@ -2,6 +2,7 @@ package kung.stocknews.Model;
 
 import android.net.Uri;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 /**
@@ -20,7 +21,13 @@ public class MockData {
             newsCards.add(c0);
             newsCards.add(c1);
         }
-
         return newsCards;
     }
+
+    public static ArrayList<IndexCard> getIndexCards(){
+        ArrayList<IndexCard> indexCards = new ArrayList<IndexCard>();
+
+        return indexCards;
+    }
+
 }
