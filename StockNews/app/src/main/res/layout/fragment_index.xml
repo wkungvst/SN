@@ -8,6 +8,7 @@
     <AutoCompleteTextView
         android:id="@+id/index_search"
         android:layout_marginTop="10dp"
+        android:layout_marginLeft="5dp"
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:textSize="14sp"
@@ -16,14 +17,15 @@
 
     <TextView
         android:id="@+id/search_go"
-        android:layout_width="40dp"
+        android:layout_width="55dp"
+        android:layout_marginRight="10dp"
         android:layout_height="40dp"
         android:layout_marginTop="10dp"
         android:padding="5dp"
         android:gravity="center"
         android:background="#cccccc"
         android:layout_alignParentRight="true"
-        android:text="GO"/>
+        android:text="ADD"/>
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/index_recycler"
