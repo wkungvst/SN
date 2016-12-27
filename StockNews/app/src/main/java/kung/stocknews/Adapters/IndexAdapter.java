@@ -51,13 +51,6 @@ public class IndexAdapter extends RecyclerView.Adapter<IndexAdapter.ViewHolder> 
             lprice = (TextView)v.findViewById(R.id.index_lprice);
             pchange = (TextView)v.findViewById(R.id.index_pchange);
             pchangep = (TextView)v.findViewById(R.id.index_pchangep);
-            v.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent i = new Intent(activity, DetailActivity.class);
-                //    i.putExtra("SYMBOL", )
-                }
-            });
         }
     }
 
