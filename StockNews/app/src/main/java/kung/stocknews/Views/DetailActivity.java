@@ -11,6 +11,7 @@ import android.media.Image;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.text.Html;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -19,6 +20,7 @@ import android.widget.TextView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,6 +56,13 @@ public class DetailActivity extends Activity implements LoadImageTask.Listener{
     TextView pchangepTextView;
     TextView ltradetTextView;
     TextView ltradedTextView;
+    TextView openTextView;
+    TextView highTextView;
+    TextView lowTextView;
+    TextView yearHighTextView;
+    TextView yearLowTextView;
+    TextView marketCapTextView;
+    TextView tsoTextView;
 
     static ImageView chartImageView;
     private static final String img_url = "http://ichart.finance.yahoo.com/instrument/1.0/GOOG/chart;range=1d/image;size=239x110";
@@ -82,6 +91,13 @@ public class DetailActivity extends Activity implements LoadImageTask.Listener{
         pchangepTextView = (TextView)findViewById(R.id.detail_pchangep);
         ltradedTextView = (TextView)findViewById(R.id.detail_ltraded);
         ltradetTextView = (TextView)findViewById(R.id.detail_ltradet);
+        openTextView = (TextView)findViewById(R.id.detail_open);
+        highTextView = (TextView)findViewById(R.id.detail_high);
+        lowTextView = (TextView)findViewById(R.id.detail_low);
+        yearHighTextView = (TextView)findViewById(R.id.detail_year_high);
+        yearLowTextView = (TextView)findViewById(R.id.detail_year_low);
+        tsoTextView = (TextView)findViewById(R.id.detail_tso);
+        marketCapTextView = (TextView)findViewById(R.id.detail_market_cap);
 
         mCompositeSubscription = new CompositeSubscription();
         mCompositeSubscription.add(stockObjectObservable.subscribe(new Action1<DetailObject>() {
@@ -111,6 +127,13 @@ public class DetailActivity extends Activity implements LoadImageTask.Listener{
         pchangeTextView.setText(" " + stockObject.pchange);
         pchangepTextView.setText(" (" + stockObject.pchangep + "%)");
         ltradedTextView.setText(stockObject.ltraded);
+        lowTextView.setText(Html.fromHtml("<b>Low: </b>" + stockObject.low));
+        highTextView.setText(Html.fromHtml("<b>High: </b>" + stockObject.high));
+        openTextView.setText(Html.fromHtml("<b>Open: </b>" + stockObject.open));
+        yearHighTextView.setText(Html.fromHtml("<b>52-Week High: </b>" + stockObject.high52));
+        yearLowTextView.setText(Html.fromHtml("<b>52-Week Low: </b>" + stockObject.low52));
+        tsoTextView.setText(Html.fromHtml("<b>TSO: </b>" + stockObject.tso));
+        marketCapTextView.setText(Html.fromHtml("<b>Market Cap: </b>" + stockObject.marketCap));
     }
 
     private void initialize(){
@@ -146,7 +169,15 @@ public class DetailActivity extends Activity implements LoadImageTask.Listener{
                             obj.getString("l"),
                             obj.getString("c"),
                             obj.getString("cp"),
-                            obj.getString("lt")
+                            obj.getString("lt"),
+                            obj.getString("op"),
+                            obj.getString("hi"),
+                            obj.getString("lo"),
+                            obj.getString("hi52"),
+                            obj.getString("lo52"),
+                            obj.getString("shares"),
+                            obj.getString("mc")
+
                     );
 
                     Log.d("@#$@#$", " Stock object " + obj);
@@ -189,6 +220,13 @@ public class DetailActivity extends Activity implements LoadImageTask.Listener{
         String pchange;
         String pchangep;
         String ltraded;
+        String open;
+        String high;
+        String low;
+        String high52;
+        String low52;
+        String tso;
+        String marketCap;
 
         DetailObject(
                 String symbol,
@@ -197,7 +235,14 @@ public class DetailActivity extends Activity implements LoadImageTask.Listener{
                 String lprice,
                 String pchange,
                 String pchangep,
-                String ltraded
+                String ltraded,
+                String open,
+                String high,
+                String low,
+                String high52,
+                String low52,
+                String tso,
+                String marketCap
         ){
             this.symbol = symbol;
             this.name = name;
@@ -206,6 +251,13 @@ public class DetailActivity extends Activity implements LoadImageTask.Listener{
             this.pchange = pchange;
             this.pchangep = pchangep;
             this.ltraded = ltraded;
+            this.open = open.length() == 0 ? "N/A" : open;
+            this.high = high.length() == 0 ? "N/A" : high;
+            this.low = low.length() == 0 ? "N/A" : low;
+            this.high52 = high52.length() == 0 ? "N/A" : high52;
+            this.low52 = low52.length() == 0 ? "N/A" : low52;
+            this.marketCap = marketCap.length() == 0 ? "N/A" : marketCap;
+            this.tso = tso.length() == 0 ? "N/A" : tso;
         }
     }
 }
