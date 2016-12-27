@@ -18,10 +18,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="5dp"
+        android:layout_margin="15dp"
         android:text="STOP TRACKING"
         android:elevation="3dp"
         android:layout_alignParentRight="true"
-        android:background="#bbbbbb"
+        android:background="@color/red_primary"
+        android:textColor="#ffffff"
+        android:textSize="11sp"
+        android:textStyle="bold"
         android:layout_below="@+id/detail_header"/>
 
     <android.support.v4.widget.NestedScrollView
@@ -29,10 +33,12 @@
         android:layout_below="@+id/detail_header"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="15dp">
+            android:padding="15dp"
+            android:clipToPadding="false">
 
             <TextView
                 android:id="@+id/detail_symbol"
@@ -109,10 +115,107 @@
 
             <ImageView
                 android:id="@+id/chart"
+                android:layout_below="@+id/detail_ltraded"
                 android:layout_width="150dp"
-                android:layout_height="100dp"
-                android:layout_below="@+id/detail_lprice"/>
+                android:layout_height="100dp" />
+
+            <RelativeLayout
+                android:id="@+id/values_container"
+                android:padding="5dp"
+                android:elevation="3dp"
+                android:layout_marginTop="5dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/chart"
+                android:background="#eeeeee">
+
+                <LinearLayout
+                    android:id="@+id/linear1"
+                    android:layout_margin="5dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/detail_open"
+                        android:textColor="@color/colorPrimary2"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Open: "/>
+
+                    <TextView
+                        android:id="@+id/detail_high"
+                        android:textColor="@color/colorPrimary2"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="High: "/>
+
+                    <TextView
+                        android:id="@+id/detail_low"
+                        android:layout_width="0dp"
+                        android:textColor="@color/colorPrimary2"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Low: "/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/linear2"
+                    android:layout_below="@+id/linear1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/detail_year_high"
+                        android:layout_width="0dp"
+                        android:textColor="@color/colorPrimary2"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="52-Week High: "/>
+
+                    <TextView
+                        android:id="@+id/detail_year_low"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:textColor="@color/colorPrimary2"
+                        android:layout_height="wrap_content"
+                        android:text="52-Week Low: "/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/linear3"
+                    android:layout_below="@+id/linear2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/detail_market_cap"
+                        android:layout_width="0dp"
+                        android:textColor="@color/colorPrimary2"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Market Cap: "/>
+
+                    <TextView
+                        android:id="@+id/detail_tso"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:textColor="@color/colorPrimary2"
+                        android:layout_height="wrap_content"
+                        android:text="TSO: "/>
+
+                </LinearLayout>
+
+            </RelativeLayout>
+
         </RelativeLayout>
+
     </android.support.v4.widget.NestedScrollView>
 
 </RelativeLayout>
