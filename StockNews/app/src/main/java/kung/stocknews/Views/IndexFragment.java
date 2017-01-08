@@ -163,6 +163,39 @@ public class IndexFragment extends Fragment {
             Log.e("@@@", " error: autocomplete search bar not initialized");
             return;
         }
+       // http://bulllabs.com/api/stocknames
+
+        OkHttpClient client = new OkHttpClient();
+        //http://www.google.com/finance/info?infotype=infoquoteall&q=GE,IBM,GOOG,AAPL
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(Storage.TICKER_NAMES).newBuilder();
+        String url = urlBuilder.build().toString();
+        // http://www.google.com/finance/company_news?q=IBM&start=0&num=30&output=json
+
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.d("@$)@$", " fail!");
+            }
+
+            @Override
+            public void onResponse(Call call, final Response response) throws IOException {
+                try {
+
+                    String responseData = response.body().string();
+                    Log.d("$#@$"," response: " + responseData.toString());
+                    JSONArray names = new JSONArray(responseData);
+
+                } catch (JSONException e) {
+                    Log.d("@@@", "Exception " + e);
+                }
+            }
+        });
+
+
         search.setThreshold(1);
         String[] stocks = getResources().getStringArray(R.array.stock_names);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(

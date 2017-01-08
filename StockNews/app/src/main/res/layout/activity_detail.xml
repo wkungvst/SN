@@ -30,6 +30,7 @@
 
     <android.support.v4.widget.NestedScrollView
         android:id="@+id/nested_scrollview"
+        android:padding="5dp"
         android:layout_below="@+id/detail_header"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -37,7 +38,6 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="15dp"
             android:clipToPadding="false">
 
             <TextView
@@ -46,6 +46,8 @@
                 android:layout_height="wrap_content"
                 android:textColor="@color/colorPrimary"
                 android:textSize="50sp"
+                android:layout_marginTop="10dp"
+                android:layout_marginLeft="10dp"
                 android:textStyle="bold"/>
 
             <TextView
@@ -61,15 +63,18 @@
 
             <TextView
                 android:id="@+id/detail_name"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="26sp"
+                android:textSize="23sp"
                 android:layout_marginTop="-10dp"
                 android:textColor="#aaaaaa"
                 android:layout_below="@+id/detail_symbol"/>
 
             <TextView
                 android:id="@+id/detail_lprice"
+                android:layout_marginLeft="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="40sp"
@@ -98,6 +103,8 @@
 
             <TextView
                 android:id="@+id/detail_ltraded"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="20sp"
@@ -115,6 +122,8 @@
 
             <ImageView
                 android:id="@+id/chart"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
                 android:layout_below="@+id/detail_ltraded"
                 android:layout_width="150dp"
                 android:layout_height="100dp" />
@@ -122,6 +131,8 @@
             <RelativeLayout
                 android:id="@+id/values_container"
                 android:padding="5dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
                 android:elevation="3dp"
                 android:layout_marginTop="5dp"
                 android:layout_width="match_parent"
@@ -213,6 +224,27 @@
                 </LinearLayout>
 
             </RelativeLayout>
+
+            <TextView
+                android:id="@+id/latest_news"
+                android:layout_marginTop="20dp"
+                android:text="LATEST NEWS"
+                android:textColor="#ffffff"
+                android:padding="5dp"
+                android:layout_marginLeft="10dp"
+                android:background="#265ea5"
+                android:layout_below="@+id/values_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/detail_news_recycler"
+                android:layout_below="@+id/latest_news"
+                android:layout_marginTop="-10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+            </android.support.v7.widget.RecyclerView>
 
         </RelativeLayout>
 
