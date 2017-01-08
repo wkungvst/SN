@@ -11,6 +11,8 @@ import android.media.Image;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -18,6 +20,9 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.jakewharton.rxbinding.view.RxView;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
@@ -25,8 +30,11 @@ import org.w3c.dom.Text;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
 
+import kung.stocknews.Adapters.NewsAdapter;
 import kung.stocknews.Helpers.LoadImageTask;
+import kung.stocknews.Model.NewsCard;
 import kung.stocknews.R;
 import kung.stocknews.Storage.Storage;
 import okhttp3.Call;
@@ -63,6 +71,9 @@ public class DetailActivity extends Activity implements LoadImageTask.Listener{
     TextView yearLowTextView;
     TextView marketCapTextView;
     TextView tsoTextView;
+    ArrayList<NewsCard> newsCardList;
+    RecyclerView recyclerView;
+    NewsAdapter adapter;
 
     static ImageView chartImageView;
     private static final String img_url = "http://ichart.finance.yahoo.com/instrument/1.0/GOOG/chart;range=1d/image;size=239x110";
@@ -76,12 +87,15 @@ public class DetailActivity extends Activity implements LoadImageTask.Listener{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+
         Intent i = getIntent();
         symbol = i.getStringExtra("SYMBOL");
         if(symbol == null){
             Log.e("@@@", " no symbol specified");
             return;
         }
+        recyclerView = (RecyclerView)findViewById(R.id.detail_news_recycler);
+        recyclerView.setHasFixedSize(true);
         chartImageView = (ImageView)findViewById(R.id.chart);
         symbolTextView = (TextView)findViewById(R.id.detail_symbol);
         nameTextView = (TextView)findViewById(R.id.detail_name);
@@ -111,6 +125,14 @@ public class DetailActivity extends Activity implements LoadImageTask.Listener{
                 });
             }
         }));
+
+        mCompositeSubscription.add(RxView.clicks(findViewById(R.id.remove_stock)).subscribe(new Action1<Void>() {
+            @Override
+            public void call(Void aVoid) {
+
+            }
+        }));
+
         initialize();
         new LoadImageTask(this).execute(img_url);
     }
@@ -138,6 +160,71 @@ public class DetailActivity extends Activity implements LoadImageTask.Listener{
 
     private void initialize(){
         getMainContent();
+        getNews();
+    }
+
+    private void getNews(){
+        if(symbol == null){return;}
+        newsCardList = new ArrayList<NewsCard>();
+        OkHttpClient client = new OkHttpClient();
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(Storage.GOOGLE_NEWS_API).newBuilder();
+        urlBuilder.addQueryParameter("q", symbol);
+        urlBuilder.addQueryParameter("output", "json");
+        urlBuilder.addQueryParameter("start", "0");
+        urlBuilder.addQueryParameter("num", "10");
+        String url = urlBuilder.build().toString();
+        // http://www.google.com/finance/company_news?q=IBM&start=0&num=30&output=json
+
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.d("@$)@$", " fail!");
+            }
+
+            @Override
+            public void onResponse(Call call, final Response response) throws IOException {
+                try {
+                    String responseData = response.body().string();
+                    JSONObject jsonObject = new JSONObject(responseData);
+                    //    Log.d("@#$@#", "obj: " + jsonObject);
+                    JSONArray cluster = jsonObject.getJSONArray("clusters");
+                    //    Log.d("#$)@#$", " a : " + cluster);
+
+                    for(int j=0;j<cluster.length();j++){
+                        JSONObject clusterObj = cluster.getJSONObject(j);
+                        //    Log.d("@#$@#$", "cluster obj: " + clusterObj);
+                        if(clusterObj.has("a")){
+                            JSONArray array = clusterObj.getJSONArray("a");
+                            //    Log.d("@#$@)&*#$", " array: " + array);
+                            for(int i=0;i<array.length();i++){
+                                JSONObject item = array.getJSONObject(i);
+                                NewsCard n = new NewsCard(item.get("t").toString(), item.get("d").toString(), item.get("sp").toString(), item.get("s").toString(), item.get("u").toString());
+                            //    Log.d("$@$@#", " [stock = " + stock + "] TITLE: " + item.get("t") + " DATE TIME: " + item.get("d") + "\n");
+                                newsCardList.add(n);
+                            }
+                        }
+                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            adapter = new NewsAdapter(newsCardList);
+                            adapter.notifyDataSetChanged();
+                            recyclerView.setAdapter(adapter);
+                            LinearLayoutManager llm = new LinearLayoutManager(DetailActivity.this);
+                            recyclerView.setLayoutManager(llm);
+                        }
+                    });
+
+                } catch (JSONException e) {
+                    Log.d("@@@", "Exception " + e);
+                }
+            }
+        });
+
     }
 
     private void getMainContent(){
