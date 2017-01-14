@@ -2,16 +2,17 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#ffffff">
+    android:background="@color/green_primary">
 
-    <TextView
+    <ImageView
         android:id="@+id/detail_header"
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:elevation="4dp"
-        android:background="@color/header_primary"
-        android:textColor="#ffffff"
-        android:text="MarketSpring"/>
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:padding="10dp"
+        android:background="@color/green_primary"
+        android:elevation="3dp"
+
+        android:src="@drawable/banner" />
 
     <TextView
         android:id="@+id/remove_stock"
@@ -30,7 +31,8 @@
 
     <android.support.v4.widget.NestedScrollView
         android:id="@+id/nested_scrollview"
-        android:padding="5dp"
+        android:background="#ffffff"
+        android:padding="2dp"
         android:layout_below="@+id/detail_header"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -232,7 +234,7 @@
                 android:textColor="#ffffff"
                 android:padding="5dp"
                 android:layout_marginLeft="10dp"
-                android:background="#265ea5"
+                android:background="@color/green_primary"
                 android:layout_below="@+id/values_container"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
@@ -241,6 +243,8 @@
                 android:id="@+id/detail_news_recycler"
                 android:layout_below="@+id/latest_news"
                 android:layout_marginTop="-10dp"
+                android:layout_marginLeft="-2dp"
+                android:layout_marginRight="-2dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 

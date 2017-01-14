@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -17,7 +18,13 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
@@ -48,6 +55,7 @@ public class NewsFragment extends Fragment {
     ArrayList<NewsCard> newsCardList;
     CompositeSubscription mCompositeSubscription;
     HashSet<String> stockList;
+    private SwipeRefreshLayout swipeContainer;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -66,6 +74,52 @@ public class NewsFragment extends Fragment {
         }));
 
     //    initialize();
+    }
+
+
+    public void sort() {
+        Collections.sort(newsCardList, new Comparator<NewsCard>() {
+            @Override
+            public int compare(NewsCard n1, NewsCard n2) {
+                return compareSort(n1.getTime(),n2.getTime());
+            }
+        });
+    }
+
+    private int compareSort(String t1, String t2){
+
+        if(t1.contains("ago") && (!t2.contains("ago"))){
+            return -1;
+        }
+        if(!t1.contains("ago") && (t2.contains("ago"))){
+            return 1;
+        }
+        // both within 24 hours
+        if (t1.contains("ago") && (t2.contains("ago"))){
+
+            if(t1.contains("minute") && (!t2.contains("minute"))){
+                return -1;
+            }
+            if(!t1.contains("minute") && (t2.contains("minute"))){
+                return 1;
+            }
+            int r1 = Integer.parseInt(t1.substring(0,2).trim());
+            int r2 = Integer.parseInt(t2.substring(0,2).trim());
+            return r1 > r2 ? 1 : -1;
+        }
+
+        if (!t1.contains("ago") && (!t2.contains("ago"))){
+            SimpleDateFormat df = new SimpleDateFormat("MMM dd, yyyy");
+            try {
+                return df.parse(t2).compareTo(df.parse(t1));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+
+        return 0;
     }
 
     private void initialize(){
@@ -103,14 +157,16 @@ public class NewsFragment extends Fragment {
 
                         for(int j=0;j<cluster.length();j++){
                             JSONObject clusterObj = cluster.getJSONObject(j);
-                            //    Log.d("@#$@#$", "cluster obj: " + clusterObj);
+                           //     Log.d("@#$@#$", "cluster obj: " + clusterObj);
                             if(clusterObj.has("a")){
                                 JSONArray array = clusterObj.getJSONArray("a");
-                                //    Log.d("@#$@)&*#$", " array: " + array);
+                             //       Log.d("@#$@)&*#$", " array: " + array);
                                 for(int i=0;i<array.length();i++){
                                     JSONObject item = array.getJSONObject(i);
-                                    NewsCard n = new NewsCard(item.get("t").toString(), item.get("d").toString(), item.get("sp").toString(), item.get("s").toString(), item.get("u").toString());
-                                    Log.d("$@$@#", " [stock = " + stock + "] TITLE: " + item.get("t") + " DATE TIME: " + item.get("d") + "\n");
+                                 //   Log.d("@$@)$", " json item: " + item);
+                                    NewsCard n = new NewsCard(stock, item.get("t").toString(), item.get("d").toString(), item.get("sp").toString(), item.get("s").toString(), item.get("u").toString());
+
+                                //    Log.d("$@$@#", " [stock = " + stock + "] TITLE: " + item.get("t") + " DATE TIME: " + item.get("d") + "\n");
                                     newsCardList.add(n);
                                 }
                             }
@@ -118,11 +174,14 @@ public class NewsFragment extends Fragment {
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                sort();
                                 adapter = new NewsAdapter(newsCardList);
                                 adapter.notifyDataSetChanged();
+
                                 recyclerView.setAdapter(adapter);
                                 LinearLayoutManager llm = new LinearLayoutManager(getActivity());
                                 recyclerView.setLayoutManager(llm);
+                                swipeContainer.setRefreshing(false);
                             }
                         });
 
@@ -138,6 +197,22 @@ public class NewsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_news, container, false);
+        swipeContainer = (SwipeRefreshLayout)view.findViewById(R.id.swipe_container);
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                // Your code to refresh the list here.
+                // Make sure you call swipeContainer.setRefreshing(false)
+                // once the network request has completed successfully.
+                initialize();
+            }
+        });
+        // Configure the refreshing colors
+        swipeContainer.setColorSchemeResources(R.color.red_primary,
+                R.color.green_primary,
+                R.color.secondary,
+                R.color.green_primary);
+
         recyclerView = (RecyclerView)view.findViewById(R.id.news_recycler);
         recyclerView.setHasFixedSize(true);
         return view;

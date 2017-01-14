@@ -1,8 +1,12 @@
 package kung.stocknews.Views;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -13,6 +17,10 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.TextView;
 
 import com.jakewharton.rxbinding.view.RxView;
 
@@ -61,15 +69,22 @@ public class MainActivity extends FragmentActivity {
     TabLayout tabLayout;
     ViewPager pager;
     HashSet<String> mStockList;
-
+    Snackbar mSnackbar;
     List<NewsCard> newsCardList;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-    //    getTickerNames();
         initialize();
+    }
+
+    public void closeKeyboard(){
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 
     private void getTickerNames(){
@@ -78,22 +93,6 @@ public class MainActivity extends FragmentActivity {
         FragmentTransaction fragmentTransaction = fm.beginTransaction();
         fragmentTransaction.replace(R.id.main_frame, webFragment);
         fragmentTransaction.commit();
-        /*
-        try {
-            URL url = new URL("http://www.androidpeople.com/wp-content/uploads/2010/06/example.xml");
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            Document doc = db.parse(new InputSource(url.openStream()));
-            doc.getDocumentElement().normalize();
-
-            NodeList nodeList = doc.getElementsByTagName("StockName");
-Log.d("#$@$", " node length: " + nodeList.getLength());
-            for (int i = 0; i < nodeList.getLength(); i++) {
-            }
-        } catch (Exception e) {
-            System.out.println("XML Pasing Excpetion = " + e);
-        }
-        */
     }
 
 
@@ -102,6 +101,7 @@ Log.d("#$@$", " node length: " + nodeList.getLength());
         mCompositeSubscription = new CompositeSubscription();
         tabLayout = (TabLayout)findViewById(R.id.tab_layout);
         pager = (ViewPager)findViewById(R.id.pager);
+    //    showSnackbar("HIIIIII");
         pager.setAdapter(new SectionPagerAdapter(getSupportFragmentManager()));
         tabLayout.setupWithViewPager(pager);
 
@@ -175,6 +175,32 @@ Log.d("#$@$", " node length: " + nodeList.getLength());
                 default:
                     return "SUBSCRIPTIONS";
             }
+        }
+    }
+
+    public void showSnackbar(String message){
+        mSnackbar = Snackbar
+                .make(findViewById(R.id.main_frame), message, Snackbar.LENGTH_INDEFINITE)
+                .setActionTextColor(getResources().getColor(R.color.colorPrimary));
+        View snack = mSnackbar.getView();
+
+        TextView snackText = (TextView)snack.findViewById(R.id.snackbar_text);
+        snackText.setTypeface(null, Typeface.BOLD);
+
+        // centering text in android's snackbar is unnecessarily complex
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
+            snackText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        else
+            snackText.setGravity(Gravity.CENTER_HORIZONTAL);
+
+        snack.setBackgroundColor(getResources().getColor(R.color.red_primary));
+        mSnackbar.show();
+    }
+
+    public void dismissSnacks(){
+        if(mSnackbar != null){
+            mSnackbar.dismiss();
+            mSnackbar = null;
         }
     }
 }

@@ -5,8 +5,9 @@
     <color name="colorAccent">#FF4081</color>
 
 
-    <color name="green_primary">#15A91C</color>
-    <color name="red_primary">#A91C27</color>
+    <color name="green_primary">#139919</color>
+    <color name="red_primary">#C61A27</color>
     <color name="header_primary">#265ea5</color>
     <color name="colorPrimary2">#666666</color>
+    <color name="secondary">#EFE336 </color>
 </resources>

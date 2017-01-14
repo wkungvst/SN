@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.BaseAdapter;
@@ -81,6 +82,7 @@ public class IndexFragment extends Fragment {
 
         RxView.longClicks(v.findViewById(R.id.search_go)).subscribe(c->{
             ((MainActivity)getActivity()).addStockToList(null);
+            initialize();
         });
 
         RxView.clicks(v.findViewById(R.id.search_go)).subscribe(aVoid -> {
@@ -88,7 +90,13 @@ public class IndexFragment extends Fragment {
             String symbol = ((AutoCompleteTextView)v.findViewById(R.id.index_search)).getText().toString();
             if(symbol != null){
                 ((MainActivity)getActivity()).addStockToList(symbol);
-                initialize();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        initialize();
+                        adapter.notifyDataSetChanged();
+                    }
+                });
             }
         });
 
@@ -97,6 +105,12 @@ public class IndexFragment extends Fragment {
             AutoAdapter adapter1 = new AutoAdapter(
                     getActivity(), strings);
             search.setAdapter(adapter1);
+            search.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                        ((MainActivity)getActivity()).closeKeyboard();
+                }
+            });
         }));
 
         setupSearch();
@@ -199,7 +213,7 @@ public class IndexFragment extends Fragment {
                 try {
                     ArrayList<AutoStockObject> stocks = new ArrayList<AutoStockObject>();
                     String responseData = response.body().string();
-                    Log.d("$#@$"," response: " + responseData.toString());
+                //    Log.d("$#@$"," response: " + responseData.toString());
                     JSONArray names = new JSONArray(responseData);
                     for(int i=0;i<names.length();i++){
                         JSONObject o = names.getJSONObject(i);

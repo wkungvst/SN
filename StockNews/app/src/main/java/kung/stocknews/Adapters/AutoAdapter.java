@@ -9,10 +9,14 @@ import android.widget.BaseAdapter;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.TextView;
+
+import com.jakewharton.rxbinding.view.RxView;
+
 import java.util.ArrayList;
 
 import kung.stocknews.Model.AutoStockObject;
 import kung.stocknews.R;
+import kung.stocknews.Views.MainActivity;
 
 /**
  * Created by wkung on 1/9/17.
@@ -60,6 +64,7 @@ public class AutoAdapter extends BaseAdapter implements Filterable {
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
+
         holder.nameText.setText(Html.fromHtml(suggestions.get(position).getName()));
         holder.tickerText.setText(Html.fromHtml(suggestions.get(position).getTicker()));
         return convertView;

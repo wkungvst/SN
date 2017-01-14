@@ -1,29 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main_frame"
-    android:orientation="vertical" android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#ffffff">
+    android:background="@color/green_primary">
 
     <TextView
         android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:text="STOCK-NEWS"
+        android:text="MarketSpring"
         android:textSize="20sp"
         android:textStyle="bold"
         android:paddingLeft="20dp"
-        android:background="#265ea5"
-        android:elevation="3dp"
+        android:background="@color/green_primary"
+        android:elevation="0dp"
         android:padding="5dp"
+        android:textColor="#ffffff"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/header_text"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:text="MarketSpring"
+        android:layout_margin="5dp"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:paddingLeft="7dp"
+        android:background="@color/green_primary"
+        android:elevation="0dp"
+        android:visibility="invisible"
         android:textColor="#ffffff" />
+
+    <ImageView
+        android:id="@+id/header_img"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:padding="5dp"
+        android:background="@color/green_primary"
+        android:elevation="0dp"
+        android:layout_marginTop="5dp"
+        android:src="@drawable/banner" />
 
     <android.support.design.widget.TabLayout
         android:id="@+id/tab_layout"
-        android:layout_below="@+id/header"
+        app:tabIndicatorColor="@color/secondary"
+        app:tabIndicatorHeight="4dp"
+        app:tabBackground="@color/green_primary"
+        app:tabTextColor="#ffffff"
+        app:tabSelectedTextColor="@color/secondary"
+        android:layout_below="@+id/header_img"
         android:layout_width="match_parent"
         android:background="#dddddd"
-        android:layout_height="40dp">
+        android:layout_height="50dp">
 
     </android.support.design.widget.TabLayout>
 

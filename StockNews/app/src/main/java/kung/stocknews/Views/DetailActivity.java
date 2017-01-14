@@ -202,7 +202,7 @@ public class DetailActivity extends Activity implements LoadImageTask.Listener{
                             //    Log.d("@#$@)&*#$", " array: " + array);
                             for(int i=0;i<array.length();i++){
                                 JSONObject item = array.getJSONObject(i);
-                                NewsCard n = new NewsCard(item.get("t").toString(), item.get("d").toString(), item.get("sp").toString(), item.get("s").toString(), item.get("u").toString());
+                                NewsCard n = new NewsCard(symbol, item.get("t").toString(), item.get("d").toString(), item.get("sp").toString(), item.get("s").toString(), item.get("u").toString());
                             //    Log.d("$@$@#", " [stock = " + stock + "] TITLE: " + item.get("t") + " DATE TIME: " + item.get("d") + "\n");
                                 newsCardList.add(n);
                             }

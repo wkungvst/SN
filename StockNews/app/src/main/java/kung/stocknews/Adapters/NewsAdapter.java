@@ -16,6 +16,8 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
 import java.lang.reflect.Array;
 import java.net.URL;
 import java.util.ArrayList;
@@ -41,9 +43,11 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.ViewHolder> {
         private TextView summary;
         private TextView source;
         private String url;
+        private TextView symbol;
 
         public ViewHolder(final View v) {
             super(v);
+            symbol = (TextView)v.findViewById(R.id.news_symbol);
             title = (TextView)v.findViewById(R.id.news_title);
             time = (TextView)v.findViewById(R.id.news_time);
             summary = (TextView)v.findViewById(R.id.news_summary);
@@ -74,6 +78,7 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.ViewHolder> {
         holder.summary.setText(Html.fromHtml(newsCards.get(position).getSummary()));
         holder.time.setText(newsCards.get(position).getTime());
         holder.source.setText(newsCards.get(position).getSource());
+        holder.symbol.setText(newsCards.get(position).getSymbol());
         holder.url = newsCards.get(position).getUrl();
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {

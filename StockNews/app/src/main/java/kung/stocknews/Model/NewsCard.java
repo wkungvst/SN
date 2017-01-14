@@ -13,14 +13,18 @@ public class NewsCard {
     private String summary;
     private String source;
     private String url;
+    private String symbol;
 
-    public NewsCard(String title, String time, String summary, String source, String url){
+    public NewsCard(String symbol, String title, String time, String summary, String source, String url){
         this.title = title;
         this.time = time;
         this.summary = summary;
         this.source = source;
         this.url = url;
+        this.symbol = symbol;
     }
+
+    public String getSymbol() { return symbol;}
 
     public String getTitle(){
         return title;
