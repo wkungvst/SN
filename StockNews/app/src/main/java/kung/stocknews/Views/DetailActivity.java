@@ -11,6 +11,7 @@ import android.media.Image;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
@@ -32,6 +33,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 
+import kung.stocknews.Adapters.DetailNewsAdapter;
 import kung.stocknews.Adapters.NewsAdapter;
 import kung.stocknews.Helpers.LoadImageTask;
 import kung.stocknews.Model.NewsCard;
@@ -50,7 +52,7 @@ import rx.subscriptions.CompositeSubscription;
 /**
  * Created by wkung on 12/23/16.
  */
-public class DetailActivity extends Activity implements LoadImageTask.Listener{
+public class DetailActivity extends FragmentActivity implements LoadImageTask.Listener{
 
     String symbol;
     DetailObject stockObject;
@@ -73,7 +75,7 @@ public class DetailActivity extends Activity implements LoadImageTask.Listener{
     TextView tsoTextView;
     ArrayList<NewsCard> newsCardList;
     RecyclerView recyclerView;
-    NewsAdapter adapter;
+    DetailNewsAdapter adapter;
 
     static ImageView chartImageView;
     private static final String img_url = "http://ichart.finance.yahoo.com/instrument/1.0/GOOG/chart;range=1d/image;size=239x110";
@@ -114,6 +116,7 @@ public class DetailActivity extends Activity implements LoadImageTask.Listener{
         marketCapTextView = (TextView)findViewById(R.id.detail_market_cap);
 
         mCompositeSubscription = new CompositeSubscription();
+
         mCompositeSubscription.add(stockObjectObservable.subscribe(new Action1<DetailObject>() {
             @Override
             public void call(DetailObject detailObject) {
@@ -126,11 +129,12 @@ public class DetailActivity extends Activity implements LoadImageTask.Listener{
             }
         }));
 
-        mCompositeSubscription.add(RxView.clicks(findViewById(R.id.remove_stock)).subscribe(new Action1<Void>() {
-            @Override
-            public void call(Void aVoid) {
-
-            }
+        mCompositeSubscription.add(RxView.clicks(findViewById(R.id.remove_stock)).subscribe(click -> {
+            Log.d("$@#$", " remove stock");
+            Intent intent = new Intent(this, DetailActivity.class);
+            intent.putExtra(MainActivity.TICKER_SYMBOL,symbol);
+            setResult(1,intent);
+            finish();//finishing activity
         }));
 
         initialize();
@@ -211,7 +215,7 @@ public class DetailActivity extends Activity implements LoadImageTask.Listener{
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            adapter = new NewsAdapter(newsCardList);
+                            adapter = new DetailNewsAdapter(newsCardList);
                             adapter.notifyDataSetChanged();
                             recyclerView.setAdapter(adapter);
                             LinearLayoutManager llm = new LinearLayoutManager(DetailActivity.this);

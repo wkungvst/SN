@@ -1,10 +1,12 @@
 package kung.stocknews.Views;
 
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -57,6 +59,7 @@ import rx.subscriptions.CompositeSubscription;
  */
 public class IndexFragment extends Fragment {
 
+    private SwipeRefreshLayout swipeContainer;
     private int MAX_LOG_LENGTH = 250;
     private CompositeSubscription mCompositeSubscription;
     RecyclerView recyclerView;
@@ -65,68 +68,112 @@ public class IndexFragment extends Fragment {
     AutoCompleteTextView search;
     HashSet<String> stockList;
     BehaviorSubject<ArrayList<AutoStockObject>> stocksAutoList = BehaviorSubject.create();
+    BehaviorSubject<String> lastStock = BehaviorSubject.create();
+    BehaviorSubject<Boolean> isError = BehaviorSubject.create(false);
+    Activity mActivity;
+    ArrayList<String> stocksCheckList;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mActivity = getActivity();
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        super.onCreateView(inflater,container,savedInstanceState);
         final View v = inflater.inflate(R.layout.fragment_index, container, false);
+        swipeContainer = (SwipeRefreshLayout)v.findViewById(R.id.swipe_container);
+        swipeContainer.setOnRefreshListener(() -> initialize());
+        // Configure the refreshing colors
+        swipeContainer.setColorSchemeResources(R.color.red_primary,
+                R.color.green_primary,
+                R.color.secondary,
+                R.color.green_primary);
         mCompositeSubscription = new CompositeSubscription();
+
+        mCompositeSubscription.add(isError.subscribe(e->{
+            if(e){
+                ((MainActivity)getActivity()).showSnackbar(MainActivity.NO_NETWORK);
+            }
+        }));
+
         search = (AutoCompleteTextView)v.findViewById(R.id.index_search);
         recyclerView = (RecyclerView)v.findViewById(R.id.index_recycler);
         recyclerView.setHasFixedSize(true);
 
         RxView.longClicks(v.findViewById(R.id.search_go)).subscribe(c->{
             ((MainActivity)getActivity()).addStockToList(null);
-            initialize();
+         //   initialize();
         });
 
         RxView.clicks(v.findViewById(R.id.search_go)).subscribe(aVoid -> {
             Log.d("@@@", " add" );
             String symbol = ((AutoCompleteTextView)v.findViewById(R.id.index_search)).getText().toString();
-            if(symbol != null){
-                ((MainActivity)getActivity()).addStockToList(symbol);
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        initialize();
-                        adapter.notifyDataSetChanged();
-                    }
-                });
+            if(symbol != null){ // TODO - minimum symbol length? valid symbol criteria?
+                if(checkStock(symbol)){
+                    lastStock.onNext(symbol);
+                    ((MainActivity)getActivity()).addStockToList(symbol);
+                }else{
+                    Log.d("@@@", " stock not found in this bitch");
+                }
             }
         });
 
-        mCompositeSubscription.add(stocksAutoList.subscribe((Action1<ArrayList<AutoStockObject>>) strings -> {
-            Log.d("@#$_@$", " do the autocopmlete");
-            AutoAdapter adapter1 = new AutoAdapter(
-                    getActivity(), strings);
-            search.setAdapter(adapter1);
-            search.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                        ((MainActivity)getActivity()).closeKeyboard();
-                }
+        // autocomplete textview
+        mCompositeSubscription.add(stocksAutoList.subscribe(strings -> {
+            getActivity().runOnUiThread(()->{
+                AutoAdapter autoAdapter = new AutoAdapter(
+                        getActivity(), strings);
+                search.setAdapter(autoAdapter);
+                search.setOnItemClickListener((adapterView, view, i, l) -> ((MainActivity)getActivity()).closeKeyboard());
             });
         }));
-
-        setupSearch();
-        initialize();
         return v;
     }
 
-    private void initialize(){
+    private Boolean checkStock(String symbol){
+        Log.d("@@@", " we have " + stocksCheckList.size() + " symbols. checking for match");
+        if(stocksCheckList.contains(symbol)){
+            Log.d("@@@", " we found a match for " + symbol);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        mCompositeSubscription.add(((MainActivity)getActivity()).getStockListObservable().subscribe(l->{
+            Log.d("@@@@@", " index fragment: get stock list observable updated");
+            initialize();
+            if(adapter != null){
+                adapter.notifyDataSetChanged();
+            }
+        }));
+        setupSearch();
+        initialize();
+    }
+
+
+    public void initialize(){
+        recyclerView.removeAllViews();
+        if(swipeContainer != null){
+            getActivity().runOnUiThread(() -> swipeContainer.setRefreshing(false));
+        }
         stockList = ((MainActivity)getActivity()).getStockList();
-        if(stockList == null || stockList.size() == 0) return;
+
+        if(stockList == null || stockList.size() == 0){
+            recyclerView.removeAllViews();
+            recyclerView.setAdapter(null);
+            return;
+        }
         String stockParams = "";
         for(String s : stockList){
             stockParams += s + ",";
         }
         stockParams = stockParams.substring(0,stockParams.length()-1);
-        Log.d("@#$@$", " stockParams: " + stockParams);
 
         OkHttpClient client = new OkHttpClient();
         //http://www.google.com/finance/info?infotype=infoquoteall&q=GE,IBM,GOOG,AAPL
@@ -134,7 +181,7 @@ public class IndexFragment extends Fragment {
         urlBuilder.addQueryParameter("q", stockParams);
         String url = urlBuilder.build().toString();
         // http://www.google.com/finance/company_news?q=IBM&start=0&num=30&output=json
-        
+
         Request request = new Request.Builder()
                 .url(url)
                 .build();
@@ -142,17 +189,29 @@ public class IndexFragment extends Fragment {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                Log.d("@$)@$", " fail!");
+                isError.onNext(true);
+                if(swipeContainer != null){
+                    getActivity().runOnUiThread(() -> swipeContainer.setRefreshing(false));
+                }
             }
 
             @Override
             public void onResponse(Call call, final Response response) throws IOException {
+
+                if(swipeContainer != null){
+                    getActivity().runOnUiThread(() -> swipeContainer.setRefreshing(false));
+                }
                 try {
                     String responseData = response.body().string();
                     responseData = responseData.substring(4,responseData.length());
                     parseJSONArray(responseData);
                 } catch (JSONException e) {
-                    Log.d("@@@", "Exception " + e);
+                    if(lastStock.getValue() != null){
+                        getActivity().runOnUiThread(()->{
+                            ((MainActivity)getActivity()).removeStockFromList(lastStock.getValue());
+                        });
+                        Log.d("@@@", "Exception. Let's remove " + lastStock.getValue() + " from the list");
+                    }
                 }
             }
         });
@@ -166,15 +225,12 @@ public class IndexFragment extends Fragment {
             JSONObject jObject = jsonarray.getJSONObject(i);
             createIndexCard(jObject);
         }
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                adapter = new IndexAdapter(indexCardList);
-                adapter.notifyDataSetChanged();
-                recyclerView.setAdapter(adapter);
-                LinearLayoutManager llm = new LinearLayoutManager(getActivity());
-                recyclerView.setLayoutManager(llm);
-            }
+        getActivity().runOnUiThread(() -> {
+            adapter = new IndexAdapter(indexCardList);
+            adapter.notifyDataSetChanged();
+            recyclerView.setAdapter(adapter);
+            LinearLayoutManager llm = new LinearLayoutManager(getActivity());
+            recyclerView.setLayoutManager(llm);
         });
     }
 
@@ -203,30 +259,30 @@ public class IndexFragment extends Fragment {
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
+
             @Override
             public void onFailure(Call call, IOException e) {
-                Log.d("@$)@$", " fail!");
+                isError.onNext(true);
             }
 
             @Override
             public void onResponse(Call call, final Response response) throws IOException {
                 try {
+                    stocksCheckList = new ArrayList<String>();
                     ArrayList<AutoStockObject> stocks = new ArrayList<AutoStockObject>();
                     String responseData = response.body().string();
-                //    Log.d("$#@$"," response: " + responseData.toString());
                     JSONArray names = new JSONArray(responseData);
                     for(int i=0;i<names.length();i++){
                         JSONObject o = names.getJSONObject(i);
-                    //    stocks.add(ticker);
+                        stocksCheckList.add(names.getJSONObject(i).getString("t"));
                         stocks.add(new AutoStockObject(names.getJSONObject(i).getString("n"),names.getJSONObject(i).getString("t")));
                     }
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        stocksAutoList.onNext(stocks);
-                    }
-                });
 
+                    if(getActivity() != null){
+                        getActivity().runOnUiThread(() -> stocksAutoList.onNext(stocks));
+                    }else{
+                        Log.d("$@#$", " response cancelled");
+                    }
 
                 } catch (JSONException e) {
                     Log.d("@@@", "Exception " + e);

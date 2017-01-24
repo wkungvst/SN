@@ -2,6 +2,7 @@ package kung.stocknews.Views;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.Build;
@@ -21,38 +22,14 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
-
-import com.jakewharton.rxbinding.view.RxView;
-
-import org.json.JSONException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import kung.stocknews.Model.MockData;
 import kung.stocknews.Model.NewsCard;
 import kung.stocknews.R;
 import kung.stocknews.Storage.Storage;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import rx.Observable;
-import rx.functions.Action1;
 import rx.subjects.BehaviorSubject;
 import rx.subscriptions.CompositeSubscription;
 
@@ -61,8 +38,11 @@ import rx.subscriptions.CompositeSubscription;
  */
 public class MainActivity extends FragmentActivity {
 
-    final static String PREFERENCES = "PREFERENCES";
-    final static String SAVED_STOCK_LIST = "SAVED_STOCK_LIST";
+    public static final int STOP_TRACKING = 1;
+    public final static String TICKER_SYMBOL = "TICKER_SYMBOL";
+    public final static String NO_NETWORK = "No Network Connection. Try again later.";
+    public final static String PREFERENCES = "PREFERENCES";
+    public final static String SAVED_STOCK_LIST = "SAVED_STOCK_LIST";
     BehaviorSubject<ArrayList<NewsCard>> newsCards = BehaviorSubject.create();
     BehaviorSubject<HashSet<String>> stockListObservable;
     CompositeSubscription mCompositeSubscription;
@@ -112,12 +92,13 @@ public class MainActivity extends FragmentActivity {
 
         // create observer for stock list
         stockListObservable = BehaviorSubject.create(mStockList);
-        mCompositeSubscription.add(stockListObservable.subscribe(new Action1<HashSet<String>>() {
-            @Override
-            public void call(HashSet<String> strings) {
-            // Log.d("@@@", " stock list updated ");
+        mCompositeSubscription.add(stockListObservable.subscribe(strings -> {
+         Log.d("@@@", " main activity: stock list updated ");
+            for(String s : stockListObservable.getValue()){
+                Log.d("@@@", " stock: " + s);
             }
         }));
+        stockListObservable.onNext(mStockList);
     }
 
     public void addStockToList(String stock){
@@ -130,11 +111,31 @@ public class MainActivity extends FragmentActivity {
             editor.commit();
             stockListObservable.onNext(mStockList);
         }else{
-            mStockList.add(stock);
+            if(!mStockList.contains(stock)){
+                mStockList.add(stock);
+                stockListObservable.onNext(mStockList);
+                SharedPreferences.Editor editor = getSharedPreferences(PREFERENCES, MODE_PRIVATE).edit();
+                editor.putStringSet(SAVED_STOCK_LIST, mStockList);
+                editor.commit();
+            }else{
+                Log.d("#@$@#$", "stock already in list");
+            }
+        }
+    }
+
+    public void removeStockFromList(String stock){
+        Log.d("@@@", " remove stock from list");
+        if(mStockList.contains(stock)){
+            mStockList.remove(stock);
             stockListObservable.onNext(mStockList);
             SharedPreferences.Editor editor = getSharedPreferences(PREFERENCES, MODE_PRIVATE).edit();
             editor.putStringSet(SAVED_STOCK_LIST, mStockList);
             editor.commit();
+            if(mStockList.size() == 0){
+                showSnackbar("You have no subscriptions.");
+            }
+        }else{
+            Log.e("@@@", " unknown stock");
         }
     }
 
@@ -180,7 +181,7 @@ public class MainActivity extends FragmentActivity {
 
     public void showSnackbar(String message){
         mSnackbar = Snackbar
-                .make(findViewById(R.id.main_frame), message, Snackbar.LENGTH_INDEFINITE)
+                .make(findViewById(R.id.main_frame), message, Snackbar.LENGTH_LONG)
                 .setActionTextColor(getResources().getColor(R.color.colorPrimary));
         View snack = mSnackbar.getView();
 
@@ -201,6 +202,17 @@ public class MainActivity extends FragmentActivity {
         if(mSnackbar != null){
             mSnackbar.dismiss();
             mSnackbar = null;
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(data != null){
+            if(data.getStringExtra(TICKER_SYMBOL) != null){
+                removeStockFromList(data.getStringExtra(TICKER_SYMBOL));
+            }else{
+                Log.d("@@@", " wrong!");
+            }
         }
     }
 }

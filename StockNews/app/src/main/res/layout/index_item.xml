@@ -3,7 +3,7 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:id="@+id/index_item_container"
     android:layout_height="wrap_content"
-    android:background="#eeeeee"
+    android:background="@drawable/index_card_selector"
     android:paddingTop="5dp"
     android:paddingLeft="10dp"
     android:paddingRight="10dp"

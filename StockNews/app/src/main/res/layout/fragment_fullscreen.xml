@@ -1,12 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_marginTop="40dp"
-    android:background="#222222">
+    android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/detail_header"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:padding="10dp"
+            android:background="@color/green_primary"
+            android:scaleType="centerInside"
+            android:elevation="3dp"
+            android:src="@drawable/banner" />
+
 
     <kung.stocknews.Widgets.FullscreenWebView
         android:id="@+id/fullscreen_webview"
+        android:layout_below="@+id/detail_header"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
     </kung.stocknews.Widgets.FullscreenWebView>
@@ -14,6 +24,8 @@
     <ProgressBar
         android:id="@+id/webview_loader"
         android:gravity="center"
+        android:indeterminateTint="@color/green_primary"
+        android:indeterminateBehavior="cycle"
         android:visibility="gone"
         android:layout_centerInParent="true"
         android:layout_width="50dp"

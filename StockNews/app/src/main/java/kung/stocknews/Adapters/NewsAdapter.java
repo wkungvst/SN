@@ -42,7 +42,7 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.ViewHolder> {
         private TextView time;
         private TextView summary;
         private TextView source;
-        private String url;
+        public String url;
         private TextView symbol;
 
         public ViewHolder(final View v) {

@@ -10,4 +10,7 @@
     <color name="header_primary">#265ea5</color>
     <color name="colorPrimary2">#666666</color>
     <color name="secondary">#EFE336 </color>
+
+    <color name="index_color_pressed">#dddddd</color>
+    <color name="index_color">#eeeeee</color>
 </resources>

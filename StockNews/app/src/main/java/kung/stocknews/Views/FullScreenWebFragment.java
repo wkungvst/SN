@@ -3,6 +3,7 @@ package kung.stocknews.Views;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -13,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.AbsListView;
 import android.widget.ProgressBar;
 
 import kung.stocknews.R;
@@ -112,6 +114,8 @@ public class FullScreenWebFragment extends Fragment {
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             if(webviewLoader != null){
+                webviewLoader.setPadding(20,20,0,0);
+                webviewLoader.setBackgroundColor(Color.parseColor("#265ea5"));
                 webviewLoader.setVisibility(View.VISIBLE);
             }
         }

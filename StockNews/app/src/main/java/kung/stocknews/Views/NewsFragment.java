@@ -56,24 +56,136 @@ public class NewsFragment extends Fragment {
     CompositeSubscription mCompositeSubscription;
     HashSet<String> stockList;
     private SwipeRefreshLayout swipeContainer;
+    private BehaviorSubject<Boolean> isError = BehaviorSubject.create(false);
 
+    @Nullable
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        super.onCreateView(inflater,container,savedInstanceState);
+        View view = inflater.inflate(R.layout.fragment_news, container, false);
         mCompositeSubscription = new CompositeSubscription();
-        Observable stockListObservable = ((MainActivity)getActivity()).getStockListObservable();
-        mCompositeSubscription.add(stockListObservable.subscribe(new Action1<HashSet<String>>() {
-            @Override
-            public void call(HashSet<String> strings) {
-                for(String s : strings){
 
+        mCompositeSubscription.add(isError.subscribe(e->{
+            getActivity().runOnUiThread(() -> {
+                if(adapter == null){
+                    view.findViewById(R.id.warning).setVisibility(e? View.VISIBLE : View.GONE);
                 }
-                Log.d("#$)@&$#", " we need to update");
-                initialize();
-            }
+                if(e){
+                    ((MainActivity)getActivity()).showSnackbar(MainActivity.NO_NETWORK);
+                }else{
+                    ((MainActivity)getActivity()).dismissSnacks();
+                }
+            });
         }));
 
-    //    initialize();
+        swipeContainer = (SwipeRefreshLayout)view.findViewById(R.id.swipe_container);
+
+        swipeContainer.setOnRefreshListener(() -> {
+            initialize();
+        });
+
+        // Configure the refreshing colors
+        swipeContainer.setColorSchemeResources(R.color.red_primary,
+                R.color.green_primary,
+                R.color.secondary,
+                R.color.green_primary);
+
+        recyclerView = (RecyclerView)view.findViewById(R.id.news_recycler);
+        recyclerView.setHasFixedSize(true);
+        return view;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        Observable stockListObservable = ((MainActivity)getActivity()).getStockListObservable();
+        mCompositeSubscription.add(stockListObservable.subscribe(list->{
+            initialize();
+        }));
+    }
+
+    private void initialize(){
+        newsCardList = new ArrayList<NewsCard>();
+        stockList = ((MainActivity)getActivity()).getStockList();
+        if((stockList == null) || stockList.size() == 0){
+            if(swipeContainer != null){
+                swipeContainer.setRefreshing(false);
+            }
+            recyclerView.removeAllViews();
+            recyclerView.setAdapter(null);
+            return;
+        }
+
+        for(final String stock : stockList){
+            OkHttpClient client = new OkHttpClient();
+            HttpUrl.Builder urlBuilder = HttpUrl.parse(Storage.GOOGLE_NEWS_API).newBuilder();
+            urlBuilder.addQueryParameter("q", stock);
+            urlBuilder.addQueryParameter("output", "json");
+            urlBuilder.addQueryParameter("start", "0");
+            urlBuilder.addQueryParameter("num", "10");
+            String url = urlBuilder.build().toString();
+            // http://www.google.com/finance/company_news?q=IBM&start=0&num=30&output=json
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    if(swipeContainer != null){
+                        swipeContainer.setRefreshing(false);
+                    }
+                    isError.onNext(true);
+                    Log.d("@$)@$", " fail!");
+                }
+
+                @Override
+                public void onResponse(Call call, final Response response) throws IOException {
+                    try {
+                        String responseData = response.body().string();
+                        JSONObject jsonObject = new JSONObject(responseData);
+                        //    Log.d("@#$@#", "obj: " + jsonObject);
+                        JSONArray cluster = jsonObject.getJSONArray("clusters");
+                        //    Log.d("#$)@#$", " a : " + cluster);
+
+                        for(int j=0;j<cluster.length();j++){
+                            JSONObject clusterObj = cluster.getJSONObject(j);
+                           //     Log.d("@#$@#$", "cluster obj: " + clusterObj);
+                            if(clusterObj.has("a")){
+                                JSONArray array = clusterObj.getJSONArray("a");
+                             //       Log.d("@#$@)&*#$", " array: " + array);
+                                for(int i=0;i<array.length();i++){
+                                    JSONObject item = array.getJSONObject(i);
+                                 //   Log.d("@$@)$", " json item: " + item);
+                                    NewsCard n = new NewsCard(stock, item.get("t").toString(), item.get("d").toString(), item.get("sp").toString(), item.get("s").toString(), item.get("u").toString());
+
+                                //    Log.d("$@$@#", " [stock = " + stock + "] TITLE: " + item.get("t") + " DATE TIME: " + item.get("d") + "\n");
+                                    newsCardList.add(n);
+                                }
+                            }
+                        }
+                        isError.onNext(false);
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                sort();
+                                adapter = new NewsAdapter(newsCardList);
+                                adapter.notifyDataSetChanged();
+
+                                recyclerView.setAdapter(adapter);
+                                LinearLayoutManager llm = new LinearLayoutManager(getActivity());
+                                recyclerView.setLayoutManager(llm);
+                                swipeContainer.setRefreshing(false);
+                            }
+                        });
+
+                    } catch (JSONException e) {
+                        Log.d("@@@", "Exception " + e);
+                    }
+                }
+            });
+        }
     }
 
 
@@ -114,107 +226,11 @@ public class NewsFragment extends Fragment {
                 return df.parse(t2).compareTo(df.parse(t1));
             } catch (ParseException e) {
                 e.printStackTrace();
+                return 0;
             }
 
         }
-
 
         return 0;
-    }
-
-    private void initialize(){
-        newsCardList = new ArrayList<NewsCard>();
-        stockList = ((MainActivity)getActivity()).getStockList();
-        if(stockList == null) return;
-        for(final String stock : stockList){
-            OkHttpClient client = new OkHttpClient();
-            HttpUrl.Builder urlBuilder = HttpUrl.parse(Storage.GOOGLE_NEWS_API).newBuilder();
-            urlBuilder.addQueryParameter("q", stock);
-            urlBuilder.addQueryParameter("output", "json");
-            urlBuilder.addQueryParameter("start", "0");
-            urlBuilder.addQueryParameter("num", "2");
-            String url = urlBuilder.build().toString();
-            // http://www.google.com/finance/company_news?q=IBM&start=0&num=30&output=json
-
-            Request request = new Request.Builder()
-                    .url(url)
-                    .build();
-
-            client.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    Log.d("@$)@$", " fail!");
-                }
-
-                @Override
-                public void onResponse(Call call, final Response response) throws IOException {
-                    try {
-                        String responseData = response.body().string();
-                        JSONObject jsonObject = new JSONObject(responseData);
-                        //    Log.d("@#$@#", "obj: " + jsonObject);
-                        JSONArray cluster = jsonObject.getJSONArray("clusters");
-                        //    Log.d("#$)@#$", " a : " + cluster);
-
-                        for(int j=0;j<cluster.length();j++){
-                            JSONObject clusterObj = cluster.getJSONObject(j);
-                           //     Log.d("@#$@#$", "cluster obj: " + clusterObj);
-                            if(clusterObj.has("a")){
-                                JSONArray array = clusterObj.getJSONArray("a");
-                             //       Log.d("@#$@)&*#$", " array: " + array);
-                                for(int i=0;i<array.length();i++){
-                                    JSONObject item = array.getJSONObject(i);
-                                 //   Log.d("@$@)$", " json item: " + item);
-                                    NewsCard n = new NewsCard(stock, item.get("t").toString(), item.get("d").toString(), item.get("sp").toString(), item.get("s").toString(), item.get("u").toString());
-
-                                //    Log.d("$@$@#", " [stock = " + stock + "] TITLE: " + item.get("t") + " DATE TIME: " + item.get("d") + "\n");
-                                    newsCardList.add(n);
-                                }
-                            }
-                        }
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                sort();
-                                adapter = new NewsAdapter(newsCardList);
-                                adapter.notifyDataSetChanged();
-
-                                recyclerView.setAdapter(adapter);
-                                LinearLayoutManager llm = new LinearLayoutManager(getActivity());
-                                recyclerView.setLayoutManager(llm);
-                                swipeContainer.setRefreshing(false);
-                            }
-                        });
-
-                    } catch (JSONException e) {
-                        Log.d("@@@", "Exception " + e);
-                    }
-                }
-            });
-        }
-    }
-
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_news, container, false);
-        swipeContainer = (SwipeRefreshLayout)view.findViewById(R.id.swipe_container);
-        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                // Your code to refresh the list here.
-                // Make sure you call swipeContainer.setRefreshing(false)
-                // once the network request has completed successfully.
-                initialize();
-            }
-        });
-        // Configure the refreshing colors
-        swipeContainer.setColorSchemeResources(R.color.red_primary,
-                R.color.green_primary,
-                R.color.secondary,
-                R.color.green_primary);
-
-        recyclerView = (RecyclerView)view.findViewById(R.id.news_recycler);
-        recyclerView.setHasFixedSize(true);
-        return view;
     }
 }

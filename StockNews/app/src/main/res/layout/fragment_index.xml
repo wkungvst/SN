@@ -4,7 +4,11 @@
     android:layout_height="match_parent"
     android:background="#ffffff">
 
-
+    <LinearLayout
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:layout_width="0px"
+        android:layout_height="0px"/>
     <AutoCompleteTextView
         android:id="@+id/index_search"
         android:layout_marginTop="10dp"
@@ -13,7 +17,7 @@
         android:layout_height="40dp"
         android:textSize="14sp"
         android:layout_toLeftOf="@+id/search_go"
-        android:hint="Search by Symbol or Company Name..."/>
+        android:hint="Search by Symbol or Company Name"/>
 
     <TextView
         android:id="@+id/search_go"
@@ -27,10 +31,19 @@
         android:layout_alignParentRight="true"
         android:text="ADD"/>
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/index_recycler"
+    <android.support.v4.widget.SwipeRefreshLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/swipe_container"
         android:layout_below="@+id/index_search"
         android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/index_recycler"
+
+        android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    </android.support.v4.widget.SwipeRefreshLayout>
 
 </RelativeLayout>

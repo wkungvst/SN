@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -34,6 +35,7 @@ public class IndexAdapter extends RecyclerView.Adapter<IndexAdapter.ViewHolder> 
 
     private ArrayList<IndexCard> indexCards;
     private static Context activity;
+    private String symbol;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
@@ -77,7 +79,9 @@ public class IndexAdapter extends RecyclerView.Adapter<IndexAdapter.ViewHolder> 
             public void onClick(View view) {
                 Intent i = new Intent(activity, DetailActivity.class);
                 i.putExtra("SYMBOL", indexCards.get(position).getSymbol());
-                activity.startActivity(i);
+                Bundle b = new Bundle();
+                b.putString(MainActivity.TICKER_SYMBOL, indexCards.get(position).getSymbol());
+                ((Activity)activity).startActivityForResult(i, MainActivity.STOP_TRACKING, b);
             }
         });
         holder.name.setText(indexCards.get(position).getName());

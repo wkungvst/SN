@@ -17,4 +17,13 @@
 
     </android.support.v4.widget.SwipeRefreshLayout>
 
+    <ImageView
+        android:id="@+id/warning"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/warning"
+        android:padding="75dp"
+        android:gravity="center"
+        android:visibility="gone"/>
+
 </RelativeLayout>
