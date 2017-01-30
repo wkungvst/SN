@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.RecyclerView;
@@ -27,6 +28,8 @@ import kung.stocknews.R;
 import kung.stocknews.Views.DetailActivity;
 import kung.stocknews.Views.FullScreenWebFragment;
 import kung.stocknews.Views.MainActivity;
+
+import static kung.stocknews.Storage.Storage.VALUES;
 
 /**
  * Created by wkung on 12/23/16.
@@ -81,17 +84,21 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.ViewHolder> {
         holder.symbol.setText(newsCards.get(position).getSymbol());
         holder.url = newsCards.get(position).getUrl();
 
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(holder.url == null)return;
-                FullScreenWebFragment webFragment = FullScreenWebFragment.newInstance(holder.url);
-                FragmentManager fm = ((MainActivity)context).getSupportFragmentManager();
-                FragmentTransaction fragmentTransaction = fm.beginTransaction();
-                fragmentTransaction.addToBackStack(null);
-                fragmentTransaction.replace(R.id.main_frame, webFragment);
-                fragmentTransaction.commit();
-            }
+        holder.itemView.setOnClickListener(view -> {
+            if(holder.url == null)return;
+            Bundle bundle = new Bundle();
+            ArrayList<String> bundleList = new ArrayList<>();
+            bundleList.add(0, newsCards.get(position).getTitle());
+            bundleList.add(1, newsCards.get(position).getSymbol());
+            bundleList.add(2, newsCards.get(position).getSource());
+            bundle.putStringArrayList(VALUES, bundleList);
+            FullScreenWebFragment webFragment = FullScreenWebFragment.newInstance(holder.url);
+            webFragment.setArguments(bundle);
+            FragmentManager fm = ((MainActivity)context).getSupportFragmentManager();
+            FragmentTransaction fragmentTransaction = fm.beginTransaction();
+            fragmentTransaction.addToBackStack(null);
+            fragmentTransaction.replace(R.id.main_frame, webFragment);
+            fragmentTransaction.commit();
         });
     }
 

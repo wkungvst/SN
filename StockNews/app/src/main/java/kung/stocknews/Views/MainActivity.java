@@ -17,6 +17,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Html;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -40,6 +41,7 @@ public class MainActivity extends FragmentActivity {
 
     public static final int STOP_TRACKING = 1;
     public final static String TICKER_SYMBOL = "TICKER_SYMBOL";
+    public final static String DUPLICATE_STOCK = "Stock already in list";
     public final static String NO_NETWORK = "No Network Connection. Try again later.";
     public final static String PREFERENCES = "PREFERENCES";
     public final static String SAVED_STOCK_LIST = "SAVED_STOCK_LIST";
@@ -67,21 +69,19 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
-    private void getTickerNames(){
-        FullScreenWebFragment webFragment = FullScreenWebFragment.newInstance("http://www.reddit.com");
-        FragmentManager fm = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fm.beginTransaction();
-        fragmentTransaction.replace(R.id.main_frame, webFragment);
-        fragmentTransaction.commit();
-    }
-
-
     private void initialize(){
-        Log.d("#@$@", " main activity initialize");
         mCompositeSubscription = new CompositeSubscription();
         tabLayout = (TabLayout)findViewById(R.id.tab_layout);
         pager = (ViewPager)findViewById(R.id.pager);
-    //    showSnackbar("HIIIIII");
+        pager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
+            @Override
+            public void onPageScrollStateChanged(int state) {}
+            @Override
+            public void onPageSelected(int position) {closeKeyboard();}
+        });
+
         pager.setAdapter(new SectionPagerAdapter(getSupportFragmentManager()));
         tabLayout.setupWithViewPager(pager);
 
@@ -91,7 +91,7 @@ public class MainActivity extends FragmentActivity {
         mStockList = (list == null) ? new HashSet<String>(Storage.getDefaultStockList()) : new HashSet<String>(list);
 
         // create observer for stock list
-        stockListObservable = BehaviorSubject.create(mStockList);
+        stockListObservable = BehaviorSubject.create();
         mCompositeSubscription.add(stockListObservable.subscribe(strings -> {
          Log.d("@@@", " main activity: stock list updated ");
             for(String s : stockListObservable.getValue()){
@@ -103,7 +103,6 @@ public class MainActivity extends FragmentActivity {
 
     public void addStockToList(String stock){
         // TODO - add check for valid symbols
-
         if(stock == null){ // clear stock list
             mStockList = new HashSet<String>();
             SharedPreferences.Editor editor = getSharedPreferences(PREFERENCES, MODE_PRIVATE).edit();
@@ -111,6 +110,7 @@ public class MainActivity extends FragmentActivity {
             editor.commit();
             stockListObservable.onNext(mStockList);
         }else{
+            stock = stock.trim();
             if(!mStockList.contains(stock)){
                 mStockList.add(stock);
                 stockListObservable.onNext(mStockList);
@@ -118,14 +118,16 @@ public class MainActivity extends FragmentActivity {
                 editor.putStringSet(SAVED_STOCK_LIST, mStockList);
                 editor.commit();
             }else{
-                Log.d("#@$@#$", "stock already in list");
+                Log.d("@@@", "stock already in list");
+                showSnackbar(DUPLICATE_STOCK);
             }
         }
     }
 
     public void removeStockFromList(String stock){
-        Log.d("@@@", " remove stock from list");
+        Log.d("@@@", " remove stock from list: " + stock + " s");
         if(mStockList.contains(stock)){
+            Log.d("@@@", " found " + stock + " in the list. removing now");
             mStockList.remove(stock);
             stockListObservable.onNext(mStockList);
             SharedPreferences.Editor editor = getSharedPreferences(PREFERENCES, MODE_PRIVATE).edit();
@@ -135,7 +137,12 @@ public class MainActivity extends FragmentActivity {
                 showSnackbar("You have no subscriptions.");
             }
         }else{
-            Log.e("@@@", " unknown stock");
+            Log.d("@@@", "unkown stock 1");
+            if(mStockList.contains("ABE")){
+                Log.d("@@@", " ABE is ABE");
+            }else{
+                Log.d("@@@", "unkown stock 2");
+            }
         }
     }
 
@@ -186,7 +193,8 @@ public class MainActivity extends FragmentActivity {
         View snack = mSnackbar.getView();
 
         TextView snackText = (TextView)snack.findViewById(R.id.snackbar_text);
-        snackText.setTypeface(null, Typeface.BOLD);
+        snackText.setText(Html.fromHtml(message));
+    //   snackText.setTypeface(null, Typeface.BOLD);
 
         // centering text in android's snackbar is unnecessarily complex
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
@@ -210,8 +218,6 @@ public class MainActivity extends FragmentActivity {
         if(data != null){
             if(data.getStringExtra(TICKER_SYMBOL) != null){
                 removeStockFromList(data.getStringExtra(TICKER_SYMBOL));
-            }else{
-                Log.d("@@@", " wrong!");
             }
         }
     }

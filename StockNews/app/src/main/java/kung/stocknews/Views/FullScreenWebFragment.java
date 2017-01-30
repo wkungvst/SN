@@ -15,11 +15,17 @@ import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AbsListView;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
+
+import com.jakewharton.rxbinding.view.RxView;
 
 import kung.stocknews.R;
 import kung.stocknews.Widgets.FullscreenWebView;
 import rx.subscriptions.CompositeSubscription;
+
+import static kung.stocknews.Storage.Storage.VALUES;
 
 /**
  * Created by wkung on 12/25/16.
@@ -30,15 +36,14 @@ public class FullScreenWebFragment extends Fragment {
     protected static String url;
     protected ProgressBar loader;
     protected ProgressBar webviewLoader;
+    protected CompositeSubscription subscription;
+    protected ImageView share;
 
     public static final String USER_VIEW_MODEL_UUID_KEY = "userViewModelUUIDKey";
     private CompositeSubscription mCompositeSubscription;
 
     public static FullScreenWebFragment newInstance(String Url) {
         FullScreenWebFragment f = new FullScreenWebFragment();
-
-        Bundle args = new Bundle();
-        f.setArguments(args);
 
         if(Url != null){
             url = Url;
@@ -52,11 +57,30 @@ public class FullScreenWebFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_fullscreen, container, false);
+        subscription = new CompositeSubscription();
         mWebView = (FullscreenWebView)view.findViewById(R.id.fullscreen_webview);
-        mWebView.getSettings().setBuiltInZoomControls(true);
+    //    mWebView.getSettings().setBuiltInZoomControls(true);
         webviewLoader = (ProgressBar)view.findViewById(R.id.webview_loader);
+        share = (ImageView)view.findViewById(R.id.share);
+
+        initializeSharing();
         initializeWebview();
         return view;
+    }
+
+    protected void initializeSharing(){
+        Bundle bundle = getArguments();
+        if(bundle == null) return;
+        String title = bundle.getStringArrayList(VALUES).get(0);
+        String symbol = bundle.getStringArrayList(VALUES).get(1);
+        String source = bundle.getStringArrayList(VALUES).get(2);
+        subscription.add(RxView.clicks(share).subscribe(c->{
+            String message = "[" + source + "] " + title + " \n\nLink To Article: " + url + "\n\nSent via MarketSpring.";
+            Intent share = new Intent(Intent.ACTION_SEND);
+            share.setType("text/plain");
+            share.putExtra(Intent.EXTRA_TEXT, message);
+            startActivity(Intent.createChooser(share, "Save or share this article from " + source + ":"));
+        }));
     }
 
     protected void initializeWebview(){
@@ -115,7 +139,6 @@ public class FullScreenWebFragment extends Fragment {
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             if(webviewLoader != null){
                 webviewLoader.setPadding(20,20,0,0);
-                webviewLoader.setBackgroundColor(Color.parseColor("#265ea5"));
                 webviewLoader.setVisibility(View.VISIBLE);
             }
         }

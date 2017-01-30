@@ -16,12 +16,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.BaseAdapter;
-import android.widget.Filter;
-import android.widget.Filterable;
-import android.widget.TextView;
 
-import com.google.gson.Gson;
 import com.jakewharton.rxbinding.view.RxView;
 import com.jakewharton.rxbinding.widget.RxTextView;
 
@@ -86,17 +81,18 @@ public class IndexFragment extends Fragment {
         final View v = inflater.inflate(R.layout.fragment_index, container, false);
         swipeContainer = (SwipeRefreshLayout)v.findViewById(R.id.swipe_container);
         swipeContainer.setOnRefreshListener(() -> initialize());
-        // Configure the refreshing colors
         swipeContainer.setColorSchemeResources(R.color.red_primary,
                 R.color.green_primary,
                 R.color.secondary,
                 R.color.green_primary);
         mCompositeSubscription = new CompositeSubscription();
 
+        // show / hide 'no network' image
         mCompositeSubscription.add(isError.subscribe(e->{
-            if(e){
-                ((MainActivity)getActivity()).showSnackbar(MainActivity.NO_NETWORK);
-            }
+            getActivity().runOnUiThread(()->{
+                v.findViewById(R.id.warning).setVisibility(e? View.VISIBLE : View.GONE);
+            });
+            if(e){((MainActivity)getActivity()).showSnackbar(MainActivity.NO_NETWORK);}
         }));
 
         search = (AutoCompleteTextView)v.findViewById(R.id.index_search);
@@ -105,25 +101,30 @@ public class IndexFragment extends Fragment {
 
         RxView.longClicks(v.findViewById(R.id.search_go)).subscribe(c->{
             ((MainActivity)getActivity()).addStockToList(null);
-         //   initialize();
         });
 
         RxView.clicks(v.findViewById(R.id.search_go)).subscribe(aVoid -> {
-            Log.d("@@@", " add" );
+            if(isError.getValue()){
+                ((MainActivity)getActivity()).showSnackbar(MainActivity.NO_NETWORK);
+                return;
+            }
             String symbol = ((AutoCompleteTextView)v.findViewById(R.id.index_search)).getText().toString();
             if(symbol != null){ // TODO - minimum symbol length? valid symbol criteria?
                 if(checkStock(symbol)){
+                    //Log.d("@@@", " adding symbol: " + symbol );
                     lastStock.onNext(symbol);
                     ((MainActivity)getActivity()).addStockToList(symbol);
                 }else{
-                    Log.d("@@@", " stock not found in this bitch");
+                    ((MainActivity)getActivity()).showSnackbar("No ticker symbol found for <b> " + symbol.toUpperCase() + " </b>" );
                 }
             }
+            ((MainActivity)getActivity()).closeKeyboard();
         });
 
         // autocomplete textview
         mCompositeSubscription.add(stocksAutoList.subscribe(strings -> {
             getActivity().runOnUiThread(()->{
+                Log.d("@@@", " setting new auto adapter");
                 AutoAdapter autoAdapter = new AutoAdapter(
                         getActivity(), strings);
                 search.setAdapter(autoAdapter);
@@ -134,9 +135,7 @@ public class IndexFragment extends Fragment {
     }
 
     private Boolean checkStock(String symbol){
-        Log.d("@@@", " we have " + stocksCheckList.size() + " symbols. checking for match");
-        if(stocksCheckList.contains(symbol)){
-            Log.d("@@@", " we found a match for " + symbol);
+        if(stocksCheckList != null && stocksCheckList.contains(symbol)){
             return true;
         }
         return false;
@@ -189,16 +188,27 @@ public class IndexFragment extends Fragment {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
+                Log.d("@@@", " index fragment: failure failure");
                 isError.onNext(true);
                 if(swipeContainer != null){
                     getActivity().runOnUiThread(() -> swipeContainer.setRefreshing(false));
                 }
+                if(lastStock.getValue() != null){
+                    getActivity().runOnUiThread(()->{
+                        ((MainActivity)getActivity()).showSnackbar("Unable to add " + lastStock.getValue() + " to stock list.");
+                        ((MainActivity)getActivity()).removeStockFromList(lastStock.getValue());
+                    });
+                    Log.d("@@@", "Exception. Let's remove " + lastStock.getValue() + " from the list");
+                }
             }
 
+
+            // TODO - TEST ABEOW
             @Override
             public void onResponse(Call call, final Response response) throws IOException {
-
-                if(swipeContainer != null){
+                Log.d("@@@", " on response");
+                isError.onNext(false);
+                if(swipeContainer != null && getActivity() != null){
                     getActivity().runOnUiThread(() -> swipeContainer.setRefreshing(false));
                 }
                 try {
@@ -206,12 +216,7 @@ public class IndexFragment extends Fragment {
                     responseData = responseData.substring(4,responseData.length());
                     parseJSONArray(responseData);
                 } catch (JSONException e) {
-                    if(lastStock.getValue() != null){
-                        getActivity().runOnUiThread(()->{
-                            ((MainActivity)getActivity()).removeStockFromList(lastStock.getValue());
-                        });
-                        Log.d("@@@", "Exception. Let's remove " + lastStock.getValue() + " from the list");
-                    }
+                    Log.d("@@@", " index fragment: response failure");
                 }
             }
         });
@@ -226,9 +231,12 @@ public class IndexFragment extends Fragment {
             createIndexCard(jObject);
         }
         getActivity().runOnUiThread(() -> {
+            Log.d("@@@", " index card list size: " + indexCardList.size());
             adapter = new IndexAdapter(indexCardList);
-            adapter.notifyDataSetChanged();
+            recyclerView.removeAllViews();
             recyclerView.setAdapter(adapter);
+            adapter.notifyDataSetChanged();
+            Log.d("@@@", " adapter size: " + adapter.getItemCount());
             LinearLayoutManager llm = new LinearLayoutManager(getActivity());
             recyclerView.setLayoutManager(llm);
         });

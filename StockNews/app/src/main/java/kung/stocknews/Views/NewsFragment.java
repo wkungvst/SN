@@ -66,6 +66,7 @@ public class NewsFragment extends Fragment {
         mCompositeSubscription = new CompositeSubscription();
 
         mCompositeSubscription.add(isError.subscribe(e->{
+            if(getActivity() == null) return;
             getActivity().runOnUiThread(() -> {
                 if(adapter == null){
                     view.findViewById(R.id.warning).setVisibility(e? View.VISIBLE : View.GONE);
@@ -137,7 +138,6 @@ public class NewsFragment extends Fragment {
                         swipeContainer.setRefreshing(false);
                     }
                     isError.onNext(true);
-                    Log.d("@$)@$", " fail!");
                 }
 
                 @Override
@@ -166,18 +166,16 @@ public class NewsFragment extends Fragment {
                             }
                         }
                         isError.onNext(false);
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                sort();
-                                adapter = new NewsAdapter(newsCardList);
-                                adapter.notifyDataSetChanged();
+                        if(getActivity() == null) return;
+                        getActivity().runOnUiThread(() -> {
+                            sort();
+                            adapter = new NewsAdapter(newsCardList);
+                            adapter.notifyDataSetChanged();
 
-                                recyclerView.setAdapter(adapter);
-                                LinearLayoutManager llm = new LinearLayoutManager(getActivity());
-                                recyclerView.setLayoutManager(llm);
-                                swipeContainer.setRefreshing(false);
-                            }
+                            recyclerView.setAdapter(adapter);
+                            LinearLayoutManager llm = new LinearLayoutManager(getActivity());
+                            recyclerView.setLayoutManager(llm);
+                            swipeContainer.setRefreshing(false);
                         });
 
                     } catch (JSONException e) {
@@ -190,6 +188,7 @@ public class NewsFragment extends Fragment {
 
 
     public void sort() {
+        if(newsCardList == null || newsCardList.size() < 2) Log.d("@@@", " this could be trouble");
         Collections.sort(newsCardList, new Comparator<NewsCard>() {
             @Override
             public int compare(NewsCard n1, NewsCard n2) {
@@ -228,9 +227,13 @@ public class NewsFragment extends Fragment {
                 e.printStackTrace();
                 return 0;
             }
-
         }
-
         return 0;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d("@@@, " , " news fragment on resume. hide keyboard");
     }
 }

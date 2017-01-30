@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import kung.stocknews.Adapters.DetailNewsAdapter;
 import kung.stocknews.Adapters.NewsAdapter;
 import kung.stocknews.Helpers.LoadImageTask;
+import kung.stocknews.Model.IDetailNews;
 import kung.stocknews.Model.NewsCard;
 import kung.stocknews.R;
 import kung.stocknews.Storage.Storage;
@@ -52,7 +53,7 @@ import rx.subscriptions.CompositeSubscription;
 /**
  * Created by wkung on 12/23/16.
  */
-public class DetailActivity extends FragmentActivity implements LoadImageTask.Listener{
+public class DetailActivity extends FragmentActivity implements LoadImageTask.Listener, IDetailNews{
 
     String symbol;
     DetailObject stockObject;
@@ -186,7 +187,6 @@ public class DetailActivity extends FragmentActivity implements LoadImageTask.Li
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                Log.d("@$)@$", " fail!");
             }
 
             @Override
@@ -215,7 +215,7 @@ public class DetailActivity extends FragmentActivity implements LoadImageTask.Li
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            adapter = new DetailNewsAdapter(newsCardList);
+                            adapter = new DetailNewsAdapter(newsCardList, DetailActivity.this);
                             adapter.notifyDataSetChanged();
                             recyclerView.setAdapter(adapter);
                             LinearLayoutManager llm = new LinearLayoutManager(DetailActivity.this);
@@ -271,7 +271,6 @@ public class DetailActivity extends FragmentActivity implements LoadImageTask.Li
 
                     );
 
-                    Log.d("@#$@#$", " Stock object " + obj);
                     stockObjectObservable.onNext(stockObject);
                 } catch (JSONException e) {
                     Log.d("@@@", "Exception " + e);
@@ -301,6 +300,16 @@ public class DetailActivity extends FragmentActivity implements LoadImageTask.Li
 
     }
 
+    @Override
+    public void hideRemoveButton() {
+        findViewById(R.id.remove_stock).setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        findViewById(R.id.remove_stock).setVisibility(View.VISIBLE);
+    }
 
     class DetailObject{
 

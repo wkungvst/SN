@@ -13,6 +13,16 @@
             android:elevation="3dp"
             android:src="@drawable/banner" />
 
+    <ImageView
+        android:id="@+id/share"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="12dp"
+        android:layout_marginRight="10dp"
+        android:elevation="4dp"
+        android:src="@drawable/share"/>
+
 
     <kung.stocknews.Widgets.FullscreenWebView
         android:id="@+id/fullscreen_webview"
