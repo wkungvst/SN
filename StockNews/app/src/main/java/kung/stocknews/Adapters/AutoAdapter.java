@@ -65,8 +65,10 @@ public class AutoAdapter extends BaseAdapter implements Filterable {
             holder = (ViewHolder) convertView.getTag();
         }
 
-        holder.nameText.setText(Html.fromHtml(suggestions.get(position).getName()));
-        holder.tickerText.setText(Html.fromHtml(suggestions.get(position).getTicker()));
+        if(suggestions != null && suggestions.size() > 0){
+            holder.nameText.setText(Html.fromHtml(suggestions.get(position).getName()));
+            holder.tickerText.setText(Html.fromHtml(suggestions.get(position).getTicker()));
+        }
         return convertView;
     }
 

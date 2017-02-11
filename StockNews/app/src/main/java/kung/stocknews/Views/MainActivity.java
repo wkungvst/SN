@@ -133,9 +133,6 @@ public class MainActivity extends FragmentActivity {
             SharedPreferences.Editor editor = getSharedPreferences(PREFERENCES, MODE_PRIVATE).edit();
             editor.putStringSet(SAVED_STOCK_LIST, mStockList);
             editor.commit();
-            if(mStockList.size() == 0){
-                showSnackbar("You have no subscriptions.");
-            }
         }else{
             Log.d("@@@", "unkown stock 1");
             if(mStockList.contains("ABE")){
@@ -187,6 +184,7 @@ public class MainActivity extends FragmentActivity {
     }
 
     public void showSnackbar(String message){
+        Log.d("@@@", " show snackbar");
         mSnackbar = Snackbar
                 .make(findViewById(R.id.main_frame), message, Snackbar.LENGTH_LONG)
                 .setActionTextColor(getResources().getColor(R.color.colorPrimary));

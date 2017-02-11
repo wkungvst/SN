@@ -6,4 +6,5 @@ package kung.stocknews.Model;
 
 public interface IDetailNews {
     void hideRemoveButton();
+    void removeElevation();
 }

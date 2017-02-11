@@ -38,6 +38,7 @@ public class DetailNewsAdapter extends NewsAdapter {
         holder.itemView.setOnClickListener(view -> {
             if(holder.url == null)return;
             detailActivity.hideRemoveButton();
+            detailActivity.removeElevation();
             Bundle bundle = new Bundle();
             ArrayList<String> bundleList = new ArrayList<>();
             bundleList.add(0, cards.get(position).getTitle());

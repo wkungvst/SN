@@ -6,6 +6,7 @@
 
 
     <color name="green_primary">#139919</color>
+    <color name="green_primary_darker">#139919</color>
     <color name="red_primary">#C61A27</color>
     <color name="header_primary">#265ea5</color>
     <color name="colorPrimary2">#666666</color>

@@ -1,35 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-        <ImageView
-            android:id="@+id/detail_header"
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:padding="10dp"
-            android:background="@color/green_primary"
-            android:scaleType="centerInside"
-            android:elevation="3dp"
-            android:src="@drawable/banner" />
-
-    <ImageView
-        android:id="@+id/share"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        android:layout_alignParentRight="true"
-        android:layout_marginTop="12dp"
-        android:layout_marginRight="10dp"
-        android:elevation="4dp"
-        android:src="@drawable/share"/>
-
+    android:layout_height="match_parent"
+    android:background="#ffffff"
+    android:id="@+id/frame">
 
     <kung.stocknews.Widgets.FullscreenWebView
+        android:animateLayoutChanges="true"
         android:id="@+id/fullscreen_webview"
         android:layout_below="@+id/detail_header"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
     </kung.stocknews.Widgets.FullscreenWebView>
+
+
+    <ImageView
+        android:id="@+id/webview_header"
+        android:animateLayoutChanges="true"
+        android:elevation="4dp"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/webview_header_height"
+        android:padding="10dp"
+        android:background="@color/green_primary"
+        android:scaleType="centerInside"
+        android:src="@drawable/banner" />
+
+    <ImageView
+        android:id="@+id/share"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:padding="5dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="12dp"
+        android:background="@color/green_primary_darker"
+        android:layout_marginRight="13dp"
+        android:elevation="12dp"
+        android:src="@drawable/share"/>
+
 
     <ProgressBar
         android:id="@+id/webview_loader"

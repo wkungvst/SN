@@ -1,5 +1,6 @@
 package kung.stocknews.Views;
 
+import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -12,9 +13,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AbsListView;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -23,6 +27,7 @@ import com.jakewharton.rxbinding.view.RxView;
 
 import kung.stocknews.R;
 import kung.stocknews.Widgets.FullscreenWebView;
+import rx.subjects.BehaviorSubject;
 import rx.subscriptions.CompositeSubscription;
 
 import static kung.stocknews.Storage.Storage.VALUES;
@@ -30,17 +35,19 @@ import static kung.stocknews.Storage.Storage.VALUES;
 /**
  * Created by wkung on 12/25/16.
  */
-public class FullScreenWebFragment extends Fragment {
+public class FullScreenWebFragment extends Fragment implements FullscreenWebView.IScrollInterface {
 
     protected FullscreenWebView mWebView;
     protected static String url;
     protected ProgressBar loader;
     protected ProgressBar webviewLoader;
     protected CompositeSubscription subscription;
+    protected int headerHeightConst = 0;
     protected ImageView share;
-
+    protected ImageView header;
+    protected boolean animateUpLock = false;
+    protected boolean animateDownLock = false;
     public static final String USER_VIEW_MODEL_UUID_KEY = "userViewModelUUIDKey";
-    private CompositeSubscription mCompositeSubscription;
 
     public static FullScreenWebFragment newInstance(String Url) {
         FullScreenWebFragment f = new FullScreenWebFragment();
@@ -59,9 +66,12 @@ public class FullScreenWebFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_fullscreen, container, false);
         subscription = new CompositeSubscription();
         mWebView = (FullscreenWebView)view.findViewById(R.id.fullscreen_webview);
-    //    mWebView.getSettings().setBuiltInZoomControls(true);
+        mWebView.setScrollInterface(this);
+    //  mWebView.getSettings().setBuiltInZoomControls(true);
         webviewLoader = (ProgressBar)view.findViewById(R.id.webview_loader);
+        header = (ImageView)view.findViewById(R.id.webview_header);
         share = (ImageView)view.findViewById(R.id.share);
+        headerHeightConst = (int) getResources().getDimension(R.dimen.webview_header_height);
 
         initializeSharing();
         initializeWebview();
@@ -120,6 +130,49 @@ public class FullScreenWebFragment extends Fragment {
         getActivity().onBackPressed();
     }
 
+    @Override
+    public void onScrollChanged(int t, int oldt) {
+        updateHeader(t,oldt);
+    }
+
+    private void updateHeader(int t, int oldt){
+        // scroll down
+        if(t > oldt){
+            animateUpLock = false;
+            if(animateDownLock)return;
+            header.animate().translationY(-header.getHeight()).setListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animator) {animateDownLock = true;}
+
+                @Override
+                public void onAnimationEnd(Animator animator) {animateDownLock = false;}
+
+                @Override
+                public void onAnimationCancel(Animator animator) {}
+
+                @Override
+                public void onAnimationRepeat(Animator animator) {}
+            });
+        // scroll up
+        }else{
+            animateDownLock = false;
+            if(animateUpLock)return;
+            header.animate().translationY(0).setListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animator) {animateUpLock = true;}
+
+                @Override
+                public void onAnimationEnd(Animator animator) {animateUpLock = false;}
+
+                @Override
+                public void onAnimationCancel(Animator animator) {}
+
+                @Override
+                public void onAnimationRepeat(Animator animator) {}
+            });
+        }
+    }
+
     class AccountFullscreenWebViewClient extends WebViewClient {
         @SuppressLint("LongLogTag")
         @Override
@@ -141,6 +194,7 @@ public class FullScreenWebFragment extends Fragment {
                 webviewLoader.setPadding(20,20,0,0);
                 webviewLoader.setVisibility(View.VISIBLE);
             }
+            super.onPageStarted(view,url,favicon);
         }
 
         @Override

@@ -17,7 +17,7 @@
     <TextView
         android:id="@+id/index_symbol"
         android:textStyle="bold"
-        android:textSize="21sp"
+        android:textSize="23sp"
         android:layout_marginTop="5dp"
         android:textColor="#555555"
         android:layout_width="wrap_content"
@@ -26,11 +26,14 @@
     <TextView
         android:id="@+id/index_name"
         android:layout_below="@+id/index_symbol"
-        android:layout_marginTop="0dp"
+        android:layout_marginTop="1dp"
         android:textSize="13sp"
         android:textColor="#888888"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:maxLength="28"
+        android:ellipsize="end"/>
 
     <TextView
         android:id="@+id/index_lprice"

@@ -57,8 +57,10 @@ public class IndexFragment extends Fragment {
     private SwipeRefreshLayout swipeContainer;
     private int MAX_LOG_LENGTH = 250;
     private CompositeSubscription mCompositeSubscription;
+    private BehaviorSubject<Boolean> isLoading = BehaviorSubject.create(false);
     RecyclerView recyclerView;
     IndexAdapter adapter;
+    AutoAdapter autoAdapter;
     ArrayList<IndexCard> indexCardList;
     AutoCompleteTextView search;
     HashSet<String> stockList;
@@ -89,10 +91,16 @@ public class IndexFragment extends Fragment {
 
         // show / hide 'no network' image
         mCompositeSubscription.add(isError.subscribe(e->{
+            if(getActivity() == null) return;
             getActivity().runOnUiThread(()->{
+                if(recyclerView != null){
+                    recyclerView.setVisibility(e ? View.GONE : View.VISIBLE);
+                }
                 v.findViewById(R.id.warning).setVisibility(e? View.VISIBLE : View.GONE);
             });
-            if(e){((MainActivity)getActivity()).showSnackbar(MainActivity.NO_NETWORK);}
+            if(e){
+                ((MainActivity)getActivity()).showSnackbar(MainActivity.NO_NETWORK);
+            }
         }));
 
         search = (AutoCompleteTextView)v.findViewById(R.id.index_search);
@@ -100,7 +108,7 @@ public class IndexFragment extends Fragment {
         recyclerView.setHasFixedSize(true);
 
         RxView.longClicks(v.findViewById(R.id.search_go)).subscribe(c->{
-            ((MainActivity)getActivity()).addStockToList(null);
+        //    ((MainActivity)getActivity()).addStockToList(null);
         });
 
         RxView.clicks(v.findViewById(R.id.search_go)).subscribe(aVoid -> {
@@ -110,7 +118,7 @@ public class IndexFragment extends Fragment {
             }
             String symbol = ((AutoCompleteTextView)v.findViewById(R.id.index_search)).getText().toString();
             if(symbol != null){ // TODO - minimum symbol length? valid symbol criteria?
-                if(checkStock(symbol)){
+                if(checkStock(symbol) || true){
                     //Log.d("@@@", " adding symbol: " + symbol );
                     lastStock.onNext(symbol);
                     ((MainActivity)getActivity()).addStockToList(symbol);
@@ -124,11 +132,15 @@ public class IndexFragment extends Fragment {
         // autocomplete textview
         mCompositeSubscription.add(stocksAutoList.subscribe(strings -> {
             getActivity().runOnUiThread(()->{
-                Log.d("@@@", " setting new auto adapter");
-                AutoAdapter autoAdapter = new AutoAdapter(
+                if(autoAdapter == null){
+                    Log.d("@@@", " setting new auto adapter");
+                    autoAdapter = new AutoAdapter(
                         getActivity(), strings);
-                search.setAdapter(autoAdapter);
-                search.setOnItemClickListener((adapterView, view, i, l) -> ((MainActivity)getActivity()).closeKeyboard());
+                    autoAdapter.notifyDataSetChanged();
+                    search.setAdapter(autoAdapter);
+                    autoAdapter.notifyDataSetChanged();
+                    search.setOnItemClickListener((adapterView, view, i, l) -> ((MainActivity)getActivity()).closeKeyboard());
+                }
             });
         }));
         return v;
@@ -146,17 +158,15 @@ public class IndexFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
         mCompositeSubscription.add(((MainActivity)getActivity()).getStockListObservable().subscribe(l->{
             Log.d("@@@@@", " index fragment: get stock list observable updated");
+            if(isLoading.getValue())return;
             initialize();
-            if(adapter != null){
-                adapter.notifyDataSetChanged();
-            }
         }));
         setupSearch();
         initialize();
     }
 
-
     public void initialize(){
+        isLoading.onNext(true);
         recyclerView.removeAllViews();
         if(swipeContainer != null){
             getActivity().runOnUiThread(() -> swipeContainer.setRefreshing(false));
@@ -195,15 +205,13 @@ public class IndexFragment extends Fragment {
                 }
                 if(lastStock.getValue() != null){
                     getActivity().runOnUiThread(()->{
-                        ((MainActivity)getActivity()).showSnackbar("Unable to add " + lastStock.getValue() + " to stock list.");
+                        ((MainActivity)getActivity()).showSnackbar("Unable to find ticker symbol: <b> MUH SYMBOL</b>.");
                         ((MainActivity)getActivity()).removeStockFromList(lastStock.getValue());
                     });
                     Log.d("@@@", "Exception. Let's remove " + lastStock.getValue() + " from the list");
                 }
             }
 
-
-            // TODO - TEST ABEOW
             @Override
             public void onResponse(Call call, final Response response) throws IOException {
                 Log.d("@@@", " on response");
@@ -216,8 +224,16 @@ public class IndexFragment extends Fragment {
                     responseData = responseData.substring(4,responseData.length());
                     parseJSONArray(responseData);
                 } catch (JSONException e) {
-                    Log.d("@@@", " index fragment: response failure");
+                    Log.d("@@@@", " index fragment: response failure");
+                    if(lastStock.getValue() != null){
+                        getActivity().runOnUiThread(()->{
+                            ((MainActivity)getActivity()).showSnackbar("Unable to add " + lastStock.getValue() + " to stock list.");
+                            ((MainActivity)getActivity()).removeStockFromList(lastStock.getValue());
+                        });
+                        Log.d("@@@", "Exception. Let's remove " + lastStock.getValue() + " from the list");
+                    }
                 }
+                isLoading.onNext(false);
             }
         });
     }
@@ -230,6 +246,8 @@ public class IndexFragment extends Fragment {
             JSONObject jObject = jsonarray.getJSONObject(i);
             createIndexCard(jObject);
         }
+        //something bad happened
+        if(getActivity() == null) return;
         getActivity().runOnUiThread(() -> {
             Log.d("@@@", " index card list size: " + indexCardList.size());
             adapter = new IndexAdapter(indexCardList);
@@ -287,27 +305,15 @@ public class IndexFragment extends Fragment {
                     }
 
                     if(getActivity() != null){
+                        Log.d("@@@", " stocks auto list on next");
                         getActivity().runOnUiThread(() -> stocksAutoList.onNext(stocks));
-                    }else{
-                        Log.d("$@#$", " response cancelled");
                     }
-
                 } catch (JSONException e) {
-                    Log.d("@@@", "Exception " + e);
+                    Log.d("@@@@ index fragment", "Exception " + e);
                 }
             }
         });
-
         search.setThreshold(1);
-        String[] stocks = getResources().getStringArray(R.array.stock_names);
-       /*
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-                getActivity(),
-                android.R.layout.simple_dropdown_item_1line, stocks);
-        search.setAdapter(adapter);
-        */
-
     }
 
 

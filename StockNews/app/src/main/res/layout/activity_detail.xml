@@ -8,28 +8,13 @@
 
     <ImageView
         android:id="@+id/detail_header"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="50dp"
+        android:visibility="gone"
         android:padding="10dp"
         android:background="@color/green_primary"
         android:elevation="3dp"
-
         android:src="@drawable/banner" />
-
-    <TextView
-        android:id="@+id/remove_stock"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="5dp"
-        android:layout_margin="15dp"
-        android:text="STOP TRACKING"
-        android:elevation="3dp"
-        android:layout_alignParentRight="true"
-        android:background="@color/red_primary"
-        android:textColor="#ffffff"
-        android:textSize="11sp"
-        android:textStyle="bold"
-        android:layout_below="@+id/detail_header"/>
 
     <android.support.v4.widget.NestedScrollView
         android:id="@+id/nested_scrollview"
@@ -45,13 +30,29 @@
             android:clipToPadding="false">
 
             <TextView
+                android:id="@+id/remove_stock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="10dp"
+                android:text="STOP TRACKING"
+                android:elevation="4dp"
+                android:background="@color/red_primary"
+                android:textColor="#ffffff"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
                 android:id="@+id/detail_symbol"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/colorPrimary"
                 android:textSize="50sp"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="0dp"
                 android:layout_marginLeft="10dp"
+                android:layout_below="@+id/remove_stock"
                 android:textStyle="bold"/>
 
             <TextView

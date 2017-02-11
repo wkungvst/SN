@@ -9,8 +9,10 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.media.Image;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -99,6 +101,7 @@ public class DetailActivity extends FragmentActivity implements LoadImageTask.Li
         }
         recyclerView = (RecyclerView)findViewById(R.id.detail_news_recycler);
         recyclerView.setHasFixedSize(true);
+        recyclerView.setNestedScrollingEnabled(false);
         chartImageView = (ImageView)findViewById(R.id.chart);
         symbolTextView = (TextView)findViewById(R.id.detail_symbol);
         nameTextView = (TextView)findViewById(R.id.detail_name);
@@ -303,6 +306,12 @@ public class DetailActivity extends FragmentActivity implements LoadImageTask.Li
     @Override
     public void hideRemoveButton() {
         findViewById(R.id.remove_stock).setVisibility(View.INVISIBLE);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @Override
+    public void removeElevation() {
+        findViewById(R.id.detail_header).setElevation(0);
     }
 
     @Override

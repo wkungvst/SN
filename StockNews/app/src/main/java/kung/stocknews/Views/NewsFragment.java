@@ -1,7 +1,9 @@
 package kung.stocknews.Views;
 
+import android.animation.Animator;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -11,6 +13,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
+import android.widget.ImageView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,6 +49,8 @@ import rx.functions.Action1;
 import rx.subjects.BehaviorSubject;
 import rx.subscriptions.CompositeSubscription;
 
+import static kung.stocknews.Storage.Storage.SCROLL_THRESHOLD;
+
 /**
  * Created by wkung on 12/23/16.
  */
@@ -57,12 +63,18 @@ public class NewsFragment extends Fragment {
     HashSet<String> stockList;
     private SwipeRefreshLayout swipeContainer;
     private BehaviorSubject<Boolean> isError = BehaviorSubject.create(false);
+    private ImageView header;
+    private Boolean animateUpLock = false;
+    private Boolean animateDownLock = false;
+    private boolean isScrollingDown = false;
+    private Handler handler;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater,container,savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_news, container, false);
+        header = (ImageView)getActivity().findViewById(R.id.header_img);
         mCompositeSubscription = new CompositeSubscription();
 
         mCompositeSubscription.add(isError.subscribe(e->{
@@ -92,6 +104,70 @@ public class NewsFragment extends Fragment {
                 R.color.green_primary);
 
         recyclerView = (RecyclerView)view.findViewById(R.id.news_recycler);
+        recyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+
+                if(handler != null)return;
+                else
+                    handler = new Handler();
+                    handler.postDelayed(() -> {
+                        handler = null;
+                    }, 250);
+
+                super.onScrolled(recyclerView, dx, dy);
+                if(dy > 0){
+                    if(!isScrollingDown){
+                        isScrollingDown = true;
+                    }else{
+                        return;
+                    }
+                }else{
+                    if(isScrollingDown){
+                        isScrollingDown = false;
+                    }else{
+                        return;
+                    }
+                }
+                animateUpLock = false;
+                if(animateDownLock)return;
+                // scroll down
+                if(dy > 0){
+                    header.animate().translationY(-header.getHeight()).setInterpolator(new AccelerateInterpolator(3)).setListener(new Animator.AnimatorListener() {
+                        @Override
+                        public void onAnimationStart(Animator animator) {
+                        }
+                        @Override
+                        public void onAnimationEnd(Animator animator) {
+                            header.setVisibility(View.GONE);
+                        }
+                        @Override
+                        public void onAnimationCancel(Animator animator) {
+                        }
+                        @Override
+                        public void onAnimationRepeat(Animator animator) {
+                        }
+                    });
+                // scroll up
+                }else if (dy < 0){
+                    header.animate().translationY(0).setInterpolator(new AccelerateInterpolator(3)).setListener(new Animator.AnimatorListener() {
+                        @Override
+                        public void onAnimationStart(Animator animator) {
+                            header.setVisibility(View.VISIBLE);
+                        }
+                        @Override
+                        public void onAnimationEnd(Animator animator) {
+                        }
+                        @Override
+                        public void onAnimationCancel(Animator animator) {
+                        }
+                        @Override
+                        public void onAnimationRepeat(Animator animator) {
+                        }
+                    });
+                }
+            }
+        });
         recyclerView.setHasFixedSize(true);
         return view;
     }
@@ -135,7 +211,7 @@ public class NewsFragment extends Fragment {
                 @Override
                 public void onFailure(Call call, IOException e) {
                     if(swipeContainer != null){
-                        swipeContainer.setRefreshing(false);
+                        getActivity().runOnUiThread(()->{swipeContainer.setRefreshing(false);});
                     }
                     isError.onNext(true);
                 }

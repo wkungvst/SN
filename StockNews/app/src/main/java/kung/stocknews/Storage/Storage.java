@@ -12,11 +12,15 @@ public class Storage {
     public static final String GOOGLE_NEWS_API = "http://www.google.com/finance/company_news";
     public static final String TICKER_NAMES = "http://bulllabs.com/api/stocknames";
     public static final String VALUES = "VALUES";
+    public static final int SCROLL_THRESHOLD = 3;
 
     public static Set<String> getDefaultStockList(){
         Set<String> list = new HashSet<String>();
-        list.add("DOW");
-        list.add("NDAQ");
+
+        list.add(".DJI");
+        list.add(".IXIC");
+        list.add(".INX");
+
         return list;
     }
 }
