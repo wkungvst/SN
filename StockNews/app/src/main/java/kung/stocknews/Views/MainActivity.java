@@ -1,5 +1,6 @@
 package kung.stocknews.Views;
 
+import android.animation.Animator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -7,6 +8,7 @@ import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -21,7 +23,9 @@ import android.text.Html;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ImageView;
 import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,6 +34,7 @@ import java.util.Set;
 import kung.stocknews.Model.NewsCard;
 import kung.stocknews.R;
 import kung.stocknews.Storage.Storage;
+import kung.stocknews.Widgets.ControlRecyclerView;
 import rx.Observable;
 import rx.subjects.BehaviorSubject;
 import rx.subscriptions.CompositeSubscription;
@@ -37,7 +42,7 @@ import rx.subscriptions.CompositeSubscription;
 /**
  * Created by wkung on 12/23/16.
  */
-public class MainActivity extends FragmentActivity {
+public class MainActivity extends FragmentActivity implements ControlRecyclerView.RecyclerScrollListener{
 
     public static final int STOP_TRACKING = 1;
     public final static String TICKER_SYMBOL = "TICKER_SYMBOL";
@@ -53,11 +58,17 @@ public class MainActivity extends FragmentActivity {
     HashSet<String> mStockList;
     Snackbar mSnackbar;
     List<NewsCard> newsCardList;
+    private Boolean animateUpLock = false;
+    private Boolean animateDownLock = false;
+    private boolean isScrollingDown = false;
+    private Handler handler;
+    private ImageView header;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        header = (ImageView)findViewById(R.id.header_img);
         initialize();
     }
 
@@ -149,6 +160,61 @@ public class MainActivity extends FragmentActivity {
 
     public HashSet<String> getStockList(){ return mStockList;}
 
+    @Override
+    public void onScroll(int dy) {
+        if(handler != null)return;
+        else {
+            handler = new Handler();
+            handler.postDelayed(() -> {
+                handler = null;
+            }, 400);
+        }
+        if(dy > 0){
+            if(!isScrollingDown){
+                isScrollingDown = true;
+            }else{
+                return;
+            }
+        }else{
+            if(isScrollingDown){
+                isScrollingDown = false;
+            }else{
+                return;
+            }
+        }
+        animateUpLock = false;
+        if(animateDownLock)return;
+        // scroll down
+        if(dy > 0){
+            header.animate().translationY(-header.getHeight()).setInterpolator(new AccelerateInterpolator(3)).setListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animator) {
+                    header.setVisibility(View.GONE);
+                }
+                @Override
+                public void onAnimationEnd(Animator animator) {}
+                @Override
+                public void onAnimationCancel(Animator animator) {}
+                @Override
+                public void onAnimationRepeat(Animator animator) {}
+            });
+            // scroll up
+        }else if (dy < 0){
+            header.animate().translationY(0).setInterpolator(new AccelerateInterpolator(3)).setListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animator) {
+                    header.setVisibility(View.VISIBLE);
+                }
+                @Override
+                public void onAnimationEnd(Animator animator) {}
+                @Override
+                public void onAnimationCancel(Animator animator) {}
+                @Override
+                public void onAnimationRepeat(Animator animator) {}
+            });
+        }
+    }
+
     public class SectionPagerAdapter extends FragmentPagerAdapter {
 
         public SectionPagerAdapter(FragmentManager fm) {
@@ -184,7 +250,6 @@ public class MainActivity extends FragmentActivity {
     }
 
     public void showSnackbar(String message){
-        Log.d("@@@", " show snackbar");
         mSnackbar = Snackbar
                 .make(findViewById(R.id.main_frame), message, Snackbar.LENGTH_LONG)
                 .setActionTextColor(getResources().getColor(R.color.colorPrimary));
